@@ -1,0 +1,15 @@
+# KoreX Web — Vite dev image
+FROM node:20-slim
+
+WORKDIR /app/apps/web
+
+# Install dependencies first for layer caching
+COPY apps/web/package.json apps/web/package-lock.json* ./
+RUN npm install
+
+# Copy app source (overridden by volume mount in dev)
+COPY apps/web/ .
+
+EXPOSE 3000
+
+CMD ["npx", "vite", "--host", "0.0.0.0", "--port", "3000"]
