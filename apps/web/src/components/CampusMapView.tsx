@@ -1,259 +1,484 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
+import L from "leaflet";
+import {
+  MapPin,
+  ExternalLink,
+  Navigation,
+  Footprints,
+  Bus,
+  AlertTriangle,
+  CheckCircle2,
+  Building2,
+  Radio,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
 
-export interface MapMarker {
+export interface GISMarker {
   id: string;
   name: string;
-  type: 'venue' | 'shuttle' | 'gate' | 'crowd_zone';
-  status: 'normal' | 'disrupted' | 'warning' | 'surge';
+  campus: string;
+  category: "auditorium" | "oat" | "shuttle" | "gate" | "corridor";
+  status: "disrupted" | "active" | "standby" | "warning";
   lat: number;
   lng: number;
   capacity?: number;
   currentCount?: number;
   details: string;
-  source: string;
-  timestamp: string;
+  googleMapsUrl: string;
+  googleMapsDirectionsUrl: string;
+  walkingDistanceMetersFromMainAud: number;
+  walkingTimeMinutesFromMainAud: number;
+  shuttleTimeMinutesFromMainAud: number;
 }
 
+export const KIIT_GIS_LOCATIONS: GISMarker[] = [
+  {
+    id: "ven_main_aud",
+    name: "Main Auditorium (Campus 6)",
+    campus: "Campus 6 — International Convention Wing",
+    category: "auditorium",
+    status: "disrupted",
+    lat: 20.3540,
+    lng: 85.8180,
+    capacity: 1600,
+    currentCount: 0,
+    details: "Outage: Ceiling AC leak reported by Estate Office (08:00 AM). 4 sessions displaced.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Auditorium+Campus+6+KIIT+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=20.3540,85.8180",
+    walkingDistanceMetersFromMainAud: 0,
+    walkingTimeMinutesFromMainAud: 0,
+    shuttleTimeMinutesFromMainAud: 0,
+  },
+  {
+    id: "ven_open_air",
+    name: "Open Air Theatre (OAT)",
+    campus: "Campus 6 — Rose Garden Complex",
+    category: "oat",
+    status: "active",
+    lat: 20.3552,
+    lng: 85.8188,
+    capacity: 600,
+    currentCount: 570,
+    details: "Relocated destination for Opening Ceremony & Valedictory. Weather canopy rig on standby.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Open+Air+Theatre+KIIT+Campus+6+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&origin=20.3540,85.8180&destination=20.3552,85.8188",
+    walkingDistanceMetersFromMainAud: 120,
+    walkingTimeMinutesFromMainAud: 1.5,
+    shuttleTimeMinutesFromMainAud: 1,
+  },
+  {
+    id: "ven_seminar",
+    name: "Campus 7 Auditorium / Seminar Hall",
+    campus: "Campus 7 — Technology Core",
+    category: "auditorium",
+    status: "active",
+    lat: 20.3582,
+    lng: 85.8210,
+    capacity: 250,
+    currentCount: 180,
+    details: "Relocated destination for Keynote AI in FinTech. Bose F1 array active.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Campus+7+Auditorium+KIIT+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&origin=20.3540,85.8180&destination=20.3582,85.8210",
+    walkingDistanceMetersFromMainAud: 450,
+    walkingTimeMinutesFromMainAud: 5.0,
+    shuttleTimeMinutesFromMainAud: 2,
+  },
+  {
+    id: "ven_ksac_chintan",
+    name: "Chintan Auditorium (KSAC)",
+    campus: "Campus 15 — Student Activity Centre",
+    category: "auditorium",
+    status: "standby",
+    lat: 20.3620,
+    lng: 85.8242,
+    capacity: 200,
+    currentCount: 95,
+    details: "Standby contingency hall with hybrid live streaming setup.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=KIIT+Student+Activity+Centre+KSAC+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&origin=20.3540,85.8180&destination=20.3620,85.8242",
+    walkingDistanceMetersFromMainAud: 850,
+    walkingTimeMinutesFromMainAud: 10.0,
+    shuttleTimeMinutesFromMainAud: 3,
+  },
+  {
+    id: "ven_convention_c3",
+    name: "Convention Centre Hall (Campus 3)",
+    campus: "Campus 3 — Kathajodi / Central Library",
+    category: "auditorium",
+    status: "standby",
+    lat: 20.3482,
+    lng: 85.8122,
+    capacity: 800,
+    currentCount: 0,
+    details: "Grand plenary backup hall. 12K projection system.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Campus+3+Central+Library+KIIT+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&origin=20.3540,85.8180&destination=20.3482,85.8122",
+    walkingDistanceMetersFromMainAud: 1200,
+    walkingTimeMinutesFromMainAud: 14.0,
+    shuttleTimeMinutesFromMainAud: 4,
+  },
+  {
+    id: "ven_lh3",
+    name: "Lecture Hall Complex LH-3",
+    campus: "Campus 12 — Law School Complex",
+    category: "auditorium",
+    status: "standby",
+    lat: 20.3592,
+    lng: 85.8172,
+    capacity: 150,
+    currentCount: 0,
+    details: "Digital podium & smart boards on standby.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=KIIT+School+of+Law+Campus+12+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&origin=20.3540,85.8180&destination=20.3592,85.8172",
+    walkingDistanceMetersFromMainAud: 550,
+    walkingTimeMinutesFromMainAud: 6.5,
+    shuttleTimeMinutesFromMainAud: 2,
+  },
+  {
+    id: "m_shuttle_02",
+    name: "Electric Shuttle 2 (Route 1)",
+    campus: "KIIT Road — Campus 6/7 Corridor",
+    category: "shuttle",
+    status: "disrupted",
+    lat: 20.3560,
+    lng: 85.8195,
+    capacity: 30,
+    details: "Battery circuit fault. Replaced by 50-seater Coach Bus A at Bay 4.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=KIIT+Road+Patia+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=20.3560,85.8195",
+    walkingDistanceMetersFromMainAud: 250,
+    walkingTimeMinutesFromMainAud: 3.0,
+    shuttleTimeMinutesFromMainAud: 1,
+  },
+  {
+    id: "m_bus_standby",
+    name: "Coach Bus A (Active Dispatch)",
+    campus: "KIIT Road — Bay 4 Terminal",
+    category: "shuttle",
+    status: "active",
+    lat: 20.3570,
+    lng: 85.8205,
+    capacity: 50,
+    currentCount: 32,
+    details: "Active emergency transit between KP-6 Hostels, Campus 6 and Campus 7.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=KIIT+Campus+7+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=20.3570,85.8205",
+    walkingDistanceMetersFromMainAud: 350,
+    walkingTimeMinutesFromMainAud: 4.0,
+    shuttleTimeMinutesFromMainAud: 1,
+  },
+  {
+    id: "m_gate_1",
+    name: "Gate 1 (Campus 6 Main VIP Gate)",
+    campus: "Campus 6 — Main Entry",
+    category: "gate",
+    status: "active",
+    lat: 20.3535,
+    lng: 85.8175,
+    details: "Optical attendee counters active: 380 scanned for Opening Ceremony.",
+    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=KIIT+Campus+6+Gate+1+Bhubaneswar",
+    googleMapsDirectionsUrl: "https://www.google.com/maps/dir/?api=1&destination=20.3535,85.8175",
+    walkingDistanceMetersFromMainAud: 80,
+    walkingTimeMinutesFromMainAud: 1.0,
+    shuttleTimeMinutesFromMainAud: 1,
+  },
+];
+
 export const CampusMapView: React.FC = () => {
-  const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
-  const [filter, setFilter] = useState<'all' | 'venues' | 'mobility' | 'crowd'>('all');
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<GISMarker | null>(KIIT_GIS_LOCATIONS[0]);
+  const [activeFilter, setActiveFilter] = useState<string>("all");
 
-  const markers: MapMarker[] = [
-    {
-      id: 'm_ven_main_aud',
-      name: 'Main Auditorium (Campus 6)',
-      type: 'venue',
-      status: 'disrupted',
-      lat: 20.3542,
-      lng: 85.8182,
-      capacity: 1600,
-      currentCount: 0,
-      details: 'Disrupted: AC ceiling leak. 4 sessions relocated.',
-      source: 'ESTATE_OFFICE_NOTION_SYNC',
-      timestamp: '08:00 AM (Fresh)',
-    },
-    {
-      id: 'm_ven_oat',
-      name: 'Open Air Theatre (Campus 6)',
-      type: 'venue',
-      status: 'surge',
-      lat: 20.3550,
-      lng: 85.8190,
-      capacity: 600,
-      currentCount: 570,
-      details: 'Active: Opening Ceremony & Valedictory relocated here.',
-      source: 'ATTENDANCE_QR_INGEST',
-      timestamp: '08:55 AM (Fresh)',
-    },
-    {
-      id: 'm_ven_aud_c7',
-      name: 'Auditorium (Campus 7)',
-      type: 'venue',
-      status: 'normal',
-      lat: 20.3585,
-      lng: 85.8214,
-      capacity: 250,
-      currentCount: 140,
-      details: 'Active: Keynote AI Session relocated here.',
-      source: 'ATTENDANCE_QR_INGEST',
-      timestamp: '08:50 AM (Fresh)',
-    },
-    {
-      id: 'm_shuttle_02',
-      name: 'Electric Shuttle 2',
-      type: 'shuttle',
-      status: 'disrupted',
-      lat: 20.3545,
-      lng: 85.8185,
-      capacity: 30,
-      details: 'Battery fault: Replaced by Coach Bus A (Bay 4).',
-      source: 'TRANSPORT_TELEMETRY_ENGINE',
-      timestamp: '11:15 AM (Fresh)',
-    },
-    {
-      id: 'm_bus_standby_a',
-      name: 'Coach Bus A (Active Standby)',
-      type: 'shuttle',
-      status: 'normal',
-      lat: 20.3560,
-      lng: 85.8200,
-      capacity: 50,
-      currentCount: 30,
-      details: 'Covering Campus 6 -> 7 Link route.',
-      source: 'TRANSPORT_DISPATCH_QUEUE',
-      timestamp: '11:20 AM (Fresh)',
-    },
-    {
-      id: 'm_corridor_c6_c7',
-      name: 'Campus 6-7 Covered Walkway',
-      type: 'crowd_zone',
-      status: 'warning',
-      lat: 20.3565,
-      lng: 85.8195,
-      capacity: 300,
-      currentCount: 270,
-      details: 'High bottleneck (90% capacity). Gate 2 reroute active.',
-      source: 'ANONYMOUS_GATE_COUNT_FEED',
-      timestamp: '08:52 AM (Fresh)',
-    },
-    {
-      id: 'm_gate_1',
-      name: 'Gate 1 Main Entry',
-      type: 'gate',
-      status: 'warning',
-      lat: 20.3538,
-      lng: 85.8178,
-      capacity: 60,
-      currentCount: 55,
-      details: 'High incoming flow rate (55/min). Diverting to Gate 2.',
-      source: 'GATE_FLOW_TELEMETRY',
-      timestamp: '08:54 AM (Fresh)',
-    },
-  ];
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
 
-  const filteredMarkers = markers.filter(m => {
-    if (filter === 'all') return true;
-    if (filter === 'venues') return m.type === 'venue';
-    if (filter === 'mobility') return m.type === 'shuttle';
-    if (filter === 'crowd') return m.type === 'crowd_zone' || m.type === 'gate';
-    return true;
-  });
+    if (!mapInstanceRef.current) {
+      // Initialize Leaflet map centered on KIIT Campus 6 (20.3540, 85.8180)
+      const map = L.map(mapContainerRef.current, {
+        center: [20.3555, 85.8195],
+        zoom: 16,
+        zoomControl: true,
+      });
 
-  const getStatusColor = (status: MapMarker['status']) => {
-    switch (status) {
-      case 'disrupted': return '#ef4444';
-      case 'surge': return '#dc2626';
-      case 'warning': return '#f59e0b';
-      case 'normal': return '#10b981';
-      default: return '#3b82f6';
+      // Dark Matter CartoDB Basemap tiles
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 20,
+      }).addTo(map);
+
+      // Add polyline connecting Campus 6 -> Campus 7 corridor
+      const corridorPoints: L.LatLngExpression[] = [
+        [20.3540, 85.8180], // Main Aud
+        [20.3552, 85.8188], // OAT
+        [20.3565, 85.8198], // Walkway
+        [20.3582, 85.8210], // Campus 7
+      ];
+
+      L.polyline(corridorPoints, {
+        color: "#06b6d4",
+        weight: 4,
+        dashArray: "6, 8",
+        opacity: 0.8,
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+    }
+
+    const map = mapInstanceRef.current;
+
+    // Clear previous markers
+    map.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
+
+    // Add Markers with customized HTML icons
+    KIIT_GIS_LOCATIONS.forEach((loc) => {
+      if (activeFilter !== "all" && loc.category !== activeFilter) return;
+
+      const isDisrupted = loc.status === "disrupted";
+      const isWarning = loc.status === "warning";
+      const markerColor = isDisrupted ? "#f43f5e" : isWarning ? "#f59e0b" : "#06b6d4";
+
+      const customIcon = L.divIcon({
+        className: "custom-gis-pin",
+        html: `
+          <div style="
+            background: ${markerColor};
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid #050811;
+            box-shadow: 0 0 12px ${markerColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+          ">
+            ${loc.category === "auditorium" ? "🏛" : loc.category === "shuttle" ? "🚌" : loc.category === "oat" ? "🎪" : "📍"}
+          </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+
+      const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).addTo(map);
+
+      marker.on("click", () => {
+        setSelectedLocation(loc);
+      });
+
+      marker.bindPopup(`
+        <div style="color: #0f172a; font-family: Inter, sans-serif; padding: 4px;">
+          <strong style="font-size: 13px; display: block; margin-bottom: 2px;">${loc.name}</strong>
+          <span style="font-size: 11px; color: #64748b;">${loc.campus}</span>
+          ${loc.capacity ? `<div style="font-size: 11px; font-weight: bold; margin-top: 4px;">Capacity: ${loc.capacity} seats</div>` : ""}
+          <div style="margin-top: 6px;">
+            <a href="${loc.googleMapsUrl}" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-size: 11px; font-weight: bold; text-decoration: underline;">
+              View on Google Maps ↗
+            </a>
+          </div>
+        </div>
+      `);
+    });
+  }, [activeFilter]);
+
+  const panToLocation = (loc: GISMarker) => {
+    setSelectedLocation(loc);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([loc.lat, loc.lng], 17, { duration: 1.2 });
     }
   };
 
   return (
-    <div style={{ backgroundColor: '#0f172a', padding: '20px', borderRadius: '12px', color: '#f8fafc' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.3rem', color: '#38bdf8' }}>🗺️ Live KIIT Campus Mobility & Crowd Map</h2>
-          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-            Real-time visual twin of campus venues, transit corridors, shuttles, and bottleneck gates.
+          <h1 className="text-2xl font-black text-white tracking-tight">
+            KIIT Campus 2.5D Real GIS Digital Twin
+          </h1>
+          <p className="text-xs text-slate-400 mt-1">
+            Real GPS coordinates, live electric shuttle tracking, gate optical flow counters, and real Google Maps directions.
           </p>
         </div>
 
-        {/* Filter controls */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {(['all', 'venues', 'mobility', 'crowd'] as const).map(tab => (
+        {/* Filter Pills */}
+        <div className="flex items-center space-x-2 overflow-x-auto">
+          {[
+            { id: "all", label: "All GIS Assets" },
+            { id: "auditorium", label: "Auditoriums & Halls" },
+            { id: "oat", label: "Open Air Theatres" },
+            { id: "shuttle", label: "Transit Fleet" },
+            { id: "gate", label: "Gate Sensors" },
+          ].map((f) => (
             <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: '6px',
-                border: '1px solid #334155',
-                backgroundColor: filter === tab ? '#0284c7' : '#1e293b',
-                color: '#fff',
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-                textTransform: 'capitalize',
-                fontWeight: 600,
-              }}
+              key={f.id}
+              onClick={() => setActiveFilter(f.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                activeFilter === f.id
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                  : "text-slate-400 hover:text-slate-200 bg-slate-900/60 border border-white/5"
+              }`}
             >
-              {tab}
+              {f.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Map visualization canvas container */}
-      <div
-        style={{
-          height: '420px',
-          backgroundColor: '#1e293b',
-          borderRadius: '10px',
-          border: '1px solid #334155',
-          position: 'relative',
-          overflow: 'hidden',
-          backgroundImage: 'radial-gradient(#334155 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      >
-        {/* Campus sector labels */}
-        <div style={{ position: 'absolute', top: 16, left: 20, color: '#64748b', fontSize: '0.8rem', fontWeight: 'bold' }}>
-          CAMPUS 6 (CENTRAL)
-        </div>
-        <div style={{ position: 'absolute', top: 16, right: 30, color: '#64748b', fontSize: '0.8rem', fontWeight: 'bold' }}>
-          CAMPUS 7 (NORTH-EAST)
-        </div>
-        <div style={{ position: 'absolute', bottom: 20, right: 30, color: '#64748b', fontSize: '0.8rem', fontWeight: 'bold' }}>
-          CAMPUS 13 (SOUTH-EAST)
-        </div>
-
-        {/* Transit path lines */}
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-          <line x1="180" y1="180" x2="480" y2="120" stroke="#0284c7" strokeWidth="3" strokeDasharray="6,6" opacity="0.6" />
-          <line x1="180" y1="180" x2="600" y2="340" stroke="#f59e0b" strokeWidth="3" strokeDasharray="6,6" opacity="0.6" />
-        </svg>
-
-        {/* Dynamic Markers */}
-        {filteredMarkers.map((marker, index) => {
-          // Layout positions on the virtual campus grid
-          const positions: Record<string, { top: number; left: number }> = {
-            m_ven_main_aud: { top: 130, left: 100 },
-            m_ven_oat: { top: 220, left: 160 },
-            m_ven_aud_c7: { top: 100, left: 490 },
-            m_shuttle_02: { top: 155, left: 240 },
-            m_bus_standby_a: { top: 135, left: 340 },
-            m_corridor_c6_c7: { top: 175, left: 290 },
-            m_gate_1: { top: 280, left: 90 },
-          };
-          const pos = positions[marker.id] || { top: 150 + index * 40, left: 200 + index * 40 };
-
-          return (
+      {/* Main Split: Interactive Real Map (7 cols) + Real Distance Matrix (5 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left: Leaflet Live Map View (7 cols) */}
+        <div className="lg:col-span-7 space-y-3">
+          <div className="glass-panel p-2 rounded-2xl overflow-hidden border border-white/10 relative shadow-2xl">
             <div
-              key={marker.id}
-              onClick={() => setSelectedMarker(marker)}
-              style={{
-                position: 'absolute',
-                top: `${pos.top}px`,
-                left: `${pos.left}px`,
-                backgroundColor: getStatusColor(marker.status),
-                color: '#fff',
-                padding: '6px 12px',
-                borderRadius: '20px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-                transform: selectedMarker?.id === marker.id ? 'scale(1.1)' : 'scale(1.0)',
-                transition: 'transform 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
-            >
-              <span>{marker.type === 'shuttle' ? '🚌' : marker.type === 'gate' ? '🚪' : marker.type === 'crowd_zone' ? '👥' : '🏛️'}</span>
-              <span>{marker.name.split('(')[0]}</span>
-            </div>
-          );
-        })}
-      </div>
+              ref={mapContainerRef}
+              className="w-full h-[520px] rounded-xl z-10"
+              style={{ background: "#050811" }}
+            />
 
-      {/* Selected Marker Detail Drawer */}
-      {selectedMarker && (
-        <div style={{ marginTop: '16px', backgroundColor: '#1e293b', padding: '16px', borderRadius: '8px', border: '1px solid #475569' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, color: '#38bdf8', fontSize: '1.05rem' }}>{selectedMarker.name}</h3>
-            <span style={{ fontSize: '0.75rem', backgroundColor: getStatusColor(selectedMarker.status), color: '#fff', padding: '3px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>
-              {selectedMarker.status}
-            </span>
-          </div>
-          <p style={{ margin: '8px 0', fontSize: '0.88rem', color: '#cbd5e1' }}>{selectedMarker.details}</p>
-          <div style={{ display: 'flex', gap: '20px', fontSize: '0.8rem', color: '#94a3b8', borderTop: '1px solid #334155', paddingTop: '8px' }}>
-            <div>Capacity: <strong>{selectedMarker.capacity || 'N/A'}</strong></div>
-            <div>Source: <code>{selectedMarker.source}</code></div>
-            <div>Freshness: <strong>{selectedMarker.timestamp}</strong></div>
+            {/* Map Legend Overlay */}
+            <div className="absolute bottom-5 left-5 z-20 p-3 rounded-xl bg-slate-950/90 backdrop-blur-md border border-white/10 text-xs space-y-1.5 shadow-xl">
+              <div className="text-[10px] font-bold uppercase text-slate-400">Live Map Legend</div>
+              <div className="flex items-center space-x-2 text-[11px] text-slate-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                <span>Outage Venue (Main Aud)</span>
+              </div>
+              <div className="flex items-center space-x-2 text-[11px] text-slate-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                <span>Active Re-homed / Standby</span>
+              </div>
+              <div className="flex items-center space-x-2 text-[11px] text-slate-300">
+                <span className="w-3 h-0.5 bg-cyan-400 border-dashed" />
+                <span>Campus 6-7 Transit Corridor</span>
+              </div>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* Right: Selected Venue Real Coordinates, Google Maps Links & Transit Matrix (5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          {selectedLocation ? (
+            <div className="glass-panel p-6 rounded-2xl space-y-5">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">
+                    {selectedLocation.category}
+                  </span>
+                  <span className="font-mono text-[11px] text-slate-400">
+                    {selectedLocation.lat.toFixed(4)}° N, {selectedLocation.lng.toFixed(4)}° E
+                  </span>
+                </div>
+                <h2 className="text-lg font-black text-white mt-1">{selectedLocation.name}</h2>
+                <p className="text-xs text-slate-400 mt-0.5">{selectedLocation.campus}</p>
+              </div>
+
+              {/* Status & Details */}
+              <div
+                className={`p-3.5 rounded-xl border text-xs leading-relaxed ${
+                  selectedLocation.status === "disrupted"
+                    ? "bg-rose-950/30 border-rose-500/40 text-rose-200"
+                    : "bg-slate-900/80 border-white/5 text-slate-200"
+                }`}
+              >
+                {selectedLocation.details}
+              </div>
+
+              {/* Real Walking & Transit Distances from Main Auditorium */}
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center space-x-1.5">
+                  <Navigation className="w-4 h-4 text-cyan-400" />
+                  <span>Real Transit Distance from Main Aud (Campus 6)</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5">
+                    <span className="text-[10px] text-slate-400 flex items-center justify-center space-x-1">
+                      <Footprints className="w-3 h-3 text-cyan-400" />
+                      <span>Walking Dist</span>
+                    </span>
+                    <div className="font-bold text-white mt-1">
+                      {selectedLocation.walkingDistanceMetersFromMainAud} Meters
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5">
+                    <span className="text-[10px] text-slate-400">Walk Time</span>
+                    <div className="font-bold text-cyan-300 mt-1">
+                      {selectedLocation.walkingTimeMinutesFromMainAud} Min
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-900/80 border border-white/5">
+                    <span className="text-[10px] text-slate-400 flex items-center justify-center space-x-1">
+                      <Bus className="w-3 h-3 text-indigo-400" />
+                      <span>Shuttle Time</span>
+                    </span>
+                    <div className="font-bold text-indigo-300 mt-1">
+                      {selectedLocation.shuttleTimeMinutesFromMainAud} Min
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Real Google Maps Navigation Links */}
+              <div className="space-y-2 pt-2 border-t border-white/10">
+                <a
+                  href={selectedLocation.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-200 font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-lg"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Open Exact Pin on Google Maps</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+
+                <a
+                  href={selectedLocation.googleMapsDirectionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-white/10 text-slate-300 font-semibold text-xs flex items-center justify-center space-x-2 transition-all"
+                >
+                  <Navigation className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Get Live Turn-by-Turn Directions</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="glass-panel p-12 text-center text-slate-500 text-xs">
+              Click any pin on the map to inspect real distance and GPS data.
+            </div>
+          )}
+
+          {/* Quick List of All KIIT Campuses */}
+          <div className="glass-panel p-4 rounded-2xl space-y-2 max-h-48 overflow-y-auto">
+            <div className="text-[10px] font-bold uppercase text-slate-400">All Patia Campus Pins</div>
+            {KIIT_GIS_LOCATIONS.map((loc) => (
+              <div
+                key={loc.id}
+                onClick={() => panToLocation(loc)}
+                className="p-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-white/5 cursor-pointer flex items-center justify-between text-xs"
+              >
+                <div>
+                  <div className="font-semibold text-white truncate">{loc.name}</div>
+                  <div className="text-[10px] text-slate-400">{loc.walkingDistanceMetersFromMainAud}m from Main Aud</div>
+                </div>
+                <span className="text-cyan-400 text-xs font-bold font-mono">Fly To →</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
