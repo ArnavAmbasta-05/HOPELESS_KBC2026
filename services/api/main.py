@@ -1,8 +1,11 @@
-"""KoreX API — FastAPI application entry point."""
-
 from __future__ import annotations
 
+import os
 import uuid
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,7 +36,9 @@ from services.api.routers import (
     transport_router,
     venues_router,
     weather_router,
+    carto_router,
 )
+
 
 # ---------------------------------------------------------------------------
 # Bootstrap observability before the app object is used
@@ -91,6 +96,8 @@ app.include_router(transport_router)
 app.include_router(crowd_router)
 app.include_router(weather_router)
 app.include_router(knowledge_router)
+app.include_router(carto_router)
+
 
 
 # ---------------------------------------------------------------------------

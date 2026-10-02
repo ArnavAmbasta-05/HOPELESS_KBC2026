@@ -17,6 +17,7 @@ from services.api.routers.sessions import router as sessions_router
 from services.api.routers.transport import router as transport_router
 from services.api.routers.venues import router as venues_router
 from services.api.routers.weather import router as weather_router
+from services.api.routers.carto import router as carto_router
 
 __all__ = [
     "events_router",
@@ -36,6 +37,8 @@ __all__ = [
     "crowd_router",
     "weather_router",
     "knowledge_router",
+    "carto_router",
 ]
+
 
 
