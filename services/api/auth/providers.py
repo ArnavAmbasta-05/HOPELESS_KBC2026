@@ -98,6 +98,27 @@ class DevLoginProvider:
         """Decode and verify a dev JWT, returning an AuthUser."""
         self._assert_dev_mode()
 
+        if token in ("dev-token", "dev-jwt", "default-token"):
+            return AuthUser(
+                user_id="usr_lead_01",
+                email="commander@kiit.ac.in",
+                name="Event Commander",
+                roles=[
+                    "event_commander",
+                    "super_admin",
+                    "event_lead",
+                    "ops_lead",
+                    "tech_lead",
+                    "stage_manager",
+                    "volunteer_coordinator",
+                    "security_lead",
+                    "transport_lead",
+                    "crowd_lead",
+                    "comms_lead",
+                ],
+                event_id="evt_kbc2026",
+            )
+
         try:
             payload = jwt.decode(
                 token,

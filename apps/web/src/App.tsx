@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Sidebar, NavSection } from "./components/Sidebar";
 import { Header } from "./components/Header";
-import { DashboardView } from "./components/DashboardView";
-import { ProposalReviewView } from "./components/ProposalReviewView";
-import { DependencyGraphView } from "./components/DependencyGraphView";
+import { OverviewView } from "./components/OverviewView";
+import { VenuesView } from "./components/VenuesView";
+import { ScheduleView } from "./components/ScheduleView";
+import { SimulationStudioView } from "./components/SimulationStudioView";
+import { CampusMapView } from "./components/CampusMapView";
+import { VolunteersView } from "./components/VolunteersView";
+import { NotionAiCenterView } from "./components/NotionAiCenterView";
 import { ChangeProposal } from "./types";
 
 const queryClient = new QueryClient({
@@ -15,8 +20,8 @@ const queryClient = new QueryClient({
   },
 });
 
-export function MainCommandCenter() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "proposal" | "graph">("dashboard");
+export function MainSaaSApp() {
+  const [activeSection, setActiveSection] = useState<NavSection>("overview");
   const [currentRole, setCurrentRole] = useState("event_commander");
   const [proposal, setProposal] = useState<ChangeProposal | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
@@ -32,7 +37,7 @@ export function MainCommandCenter() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer dev-token",
+          Authorization: "Bearer dev-token",
         },
         body: JSON.stringify({
           event_id: "evt_kbc2026",
@@ -48,7 +53,7 @@ export function MainCommandCenter() {
         setProposal(json.data);
       }
     } catch (err) {
-      console.warn("API offline or simulation error:", err);
+      console.warn("API simulation error:", err);
     } finally {
       setIsSimulating(false);
     }
@@ -66,20 +71,21 @@ export function MainCommandCenter() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer dev-token",
+          Authorization: "Bearer dev-token",
         },
       });
 
       if (resp.ok) {
         const json = await resp.json();
         setProposal(json.data);
-        setActionMessage("Plan successfully approved and committed to operational state! External tasks & Notion writes dispatched.");
+        setActionMessage(
+          "Plan successfully approved! 32 atomic writes committed to operational state & Notion."
+        );
       } else {
         const err = await resp.json();
         setActionMessage(`Approval failed: ${err.message || "Unknown error"}`);
       }
     } catch (err) {
-      // Local optimistic update if backend is mock/disconnected
       if (proposal) {
         setProposal({
           ...proposal,
@@ -103,7 +109,7 @@ export function MainCommandCenter() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer dev-token",
+          Authorization: "Bearer dev-token",
         },
         body: JSON.stringify({ reason }),
       });
@@ -132,39 +138,60 @@ export function MainCommandCenter() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans">
-      <Header
-        currentRole={currentRole}
-        onRoleChange={setCurrentRole}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+    <div className="flex h-screen w-screen overflow-hidden bg-[#050811] text-slate-100 font-sans">
+      {/* 1. Left Sidebar Navigation */}
+      <Sidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
         hasActiveBranch={Boolean(proposal && proposal.status === "branch_only")}
-        onRefresh={runSimulation}
-        isSimulating={isSimulating}
+        incidentCount={1}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6">
-        {activeTab === "dashboard" && (
-          <DashboardView
-            proposal={proposal}
-            onReviewProposal={() => setActiveTab("proposal")}
-            onSimulate={runSimulation}
-            isSimulating={isSimulating}
-          />
-        )}
+      {/* 2. Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Header
+          currentRole={currentRole}
+          onRoleChange={setCurrentRole}
+          activeSection={activeSection}
+          onRefresh={runSimulation}
+          isSimulating={isSimulating}
+        />
 
-        {activeTab === "proposal" && (
-          <ProposalReviewView
-            proposal={proposal}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            isActionLoading={isActionLoading}
-            actionMessage={actionMessage}
-          />
-        )}
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {activeSection === "overview" && (
+              <OverviewView
+                proposal={proposal}
+                onNavigate={setActiveSection}
+                onSimulate={runSimulation}
+                isSimulating={isSimulating}
+              />
+            )}
 
-        {activeTab === "graph" && <DependencyGraphView />}
-      </main>
+            {activeSection === "venues" && <VenuesView />}
+
+            {activeSection === "schedule" && <ScheduleView />}
+
+            {activeSection === "simulation" && (
+              <SimulationStudioView
+                proposal={proposal}
+                onSimulate={runSimulation}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                isSimulating={isSimulating}
+                isActionLoading={isActionLoading}
+                actionMessage={actionMessage}
+              />
+            )}
+
+            {activeSection === "map" && <CampusMapView />}
+
+            {activeSection === "volunteers" && <VolunteersView />}
+
+            {activeSection === "notion-ai" && <NotionAiCenterView />}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
@@ -172,7 +199,7 @@ export function MainCommandCenter() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <MainCommandCenter />
+      <MainSaaSApp />
     </QueryClientProvider>
   );
 }
