@@ -235,37 +235,37 @@ AT-09 · **Lead:** 04-rules-optimization · **Support:** 03-data-graph
 | S3-T5 | Infeasible state + manual queue | 04-rules-optimization | S3-T2 |
 
 - **S3-T1** Constraint evaluator `[Agent: 04-rules-optimization]`
-  - [ ] S3-T1.1 Hard constraints: capacity, time overlap, required capability, policy/safety, authorization (RULE-01).
-  - [ ] S3-T1.2 Versioned rule/threshold config (NFR-MNT-001); state→typed-variables conversion for the solver.
+  - [x] S3-T1.1 Hard constraints: capacity, time overlap, required capability, policy/safety, authorization (RULE-01).
+  - [x] S3-T1.2 Versioned rule/threshold config (NFR-MNT-001); state→typed-variables conversion for the solver.
 - **S3-T2** Venue resolver + rejection reasons `[Agent: 04-rules-optimization]`
-  - [ ] S3-T2.1 Candidate generation + scoring (minimize move cost/walking/setup).
-  - [ ] S3-T2.2 Retain every rejected candidate with a concrete reason string (RULE-04, FR-PLAN-003).
-  - [ ] S3-T2.3 Soft re-eval of speakers (arrival-building change → escort needed).
+  - [x] S3-T2.1 Candidate generation + scoring (minimize move cost/walking/setup).
+  - [x] S3-T2.2 Retain every rejected candidate with a concrete reason string (RULE-04, FR-PLAN-003).
+  - [x] S3-T2.3 Soft re-eval of speakers (arrival-building change → escort needed).
 - **S3-T3** CP-SAT volunteer reallocation `[Agent: 04-rules-optimization]`
-  - [ ] S3-T3.1 CP-SAT model: hard (skill/availability/overlap/headcount), objective (minimize changes, then load).
-  - [ ] S3-T3.2 Standby activation when headcount requires it.
+  - [x] S3-T3.1 CP-SAT model: hard (skill/availability/overlap/headcount), objective (minimize changes, then load).
+  - [x] S3-T3.2 Standby activation when headcount requires it.
 - **S3-T4** Task planner + escalations `[Agent: 04-rules-optimization]`
-  - [ ] S3-T4.1 Generate follow-up tasks (owner/team, window, deadline, dependency); EDF per team.
-  - [ ] S3-T4.2 Slack = deadline − finish; flag zero/negative slack AT RISK (FR-TASK-003).
-  - [ ] S3-T4.3 Escalate at-risk tasks to configured role owners (FR-TASK-006).
+  - [x] S3-T4.1 Generate follow-up tasks (owner/team, window, deadline, dependency); EDF per team.
+  - [x] S3-T4.2 Slack = deadline − finish; flag zero/negative slack AT RISK (FR-TASK-003).
+  - [x] S3-T4.3 Escalate at-risk tasks to configured role owners (FR-TASK-006).
 - **S3-T5** Infeasible state + manual queue `[Agent: 04-rules-optimization]`
-  - [ ] S3-T5.1 No candidate satisfies hard constraints → explicit infeasible result + constraint reasons + ranked manual actions (RULE-09, FR-PLAN-005).
+  - [x] S3-T5.1 No candidate satisfies hard constraints → explicit infeasible result + constraint reasons + ranked manual actions (RULE-09, FR-PLAN-005).
 
 **DELIVERABLES:** Rules Engine; venue resolver with rejection trace; CP-SAT volunteer model; task planner with
 slack + escalations; infeasible handler; versioned rule config.
 
 **VULNERABILITY CHECK** *(16)*
-- [ ] No rule/threshold hard-coded where it must be config; no path for free-text to alter constraints.
-- [ ] Solver inputs typed/validated; infeasible + timeout paths fail closed (never emit an unsafe plan).
-- [ ] Safety/authorization hard constraints co-reviewed and enforced outside any LLM (NFR-AI-003).
+- [x] No rule/threshold hard-coded where it must be config; no path for free-text to alter constraints.
+- [x] Solver inputs typed/validated; infeasible + timeout paths fail closed (never emit an unsafe plan).
+- [x] Safety/authorization hard constraints co-reviewed and enforced outside any LLM (NFR-AI-003).
 
 **WORKFLOW CHECK** *(17)* — golden sections [2]–[5]
-- [ ] [2] Opening→Open Air Theatre (+stage-light rig), Keynote→Seminar Hall, Panel→Open Air Theatre (+projector/screen), Prize→Open Air Theatre (+stage-light rig); rejections retained: Seminar Hall (250), LH-3 (150), LH-5 (120) with `capacity X < N registered`, and Panel's Seminar Hall rejected "already booked in this slot".
-- [ ] [2] VC (Bldg A→C) + Startup panel (Bldg B→C) → escort needed; Dr. Mehra → no action.
-- [ ] [3] −Dev off Keynote AV; +Kabir Prize, +Tanya Opening, +Meera Panel (crowd); +Arjun Keynote AV **standby**; **15 of 16 untouched**.
-- [ ] [4] 17 tasks N01–N17 with slack; **N08 "Opening act rehearsal at OAT" slack 0m → AT RISK**.
-- [ ] [5] Escalation: N08 → stage lead.
-- [ ] AT-09: with no venue meeting capacity, returns infeasible + reasons + manual queue.
+- [x] [2] Opening→Open Air Theatre (+stage-light rig), Keynote→Seminar Hall, Panel→Open Air Theatre (+projector/screen), Prize→Open Air Theatre (+stage-light rig); rejections retained: Seminar Hall (250), LH-3 (150), LH-5 (120) with `capacity X < N registered`, and Panel's Seminar Hall rejected "already booked in this slot".
+- [x] [2] VC (Bldg A→C) + Startup panel (Bldg B→C) → escort needed; Dr. Mehra → no action.
+- [x] [3] −Dev off Keynote AV; +Kabir Prize, +Tanya Opening, +Meera Panel (crowd); +Arjun Keynote AV **standby**; **15 of 16 untouched**.
+- [x] [4] 17 tasks N01–N17 with slack; **N08 "Opening act rehearsal at OAT" slack 0m → AT RISK**.
+- [x] [5] Escalation: N08 → stage lead.
+- [x] AT-09: with no venue meeting capacity, returns infeasible + reasons + manual queue.
 
 **Exit gate:** golden [2]–[5] reproduced exactly; AT-09 passes.
 
@@ -286,33 +286,33 @@ AT-08 · **Lead:** 05-simulation-proposal, 14-frontend-command-center · **Suppo
 | S4-T5 | Proposal review + approval UI | 14-frontend-command-center | S4-T2 |
 
 - **S4-T1** Simulation branches + diff `[Agent: 05-simulation-proposal]`
-  - [ ] S4-T1.1 Branch with unique id + deterministic input snapshot referencing a baseline revision; baseline never overwritten (FR-SIM-001/002).
-  - [ ] S4-T1.2 Baseline↔proposed diff: added/removed/changed objects (FR-SIM-003).
+  - [x] S4-T1.1 Branch with unique id + deterministic input snapshot referencing a baseline revision; baseline never overwritten (FR-SIM-001/002).
+  - [x] S4-T1.2 Baseline↔proposed diff: added/removed/changed objects (FR-SIM-003).
 - **S4-T2** Risk + Change Proposal `[Agent: 05-simulation-proposal]`
-  - [ ] S4-T2.1 Risk plan: at-risk tasks + unresolved dependencies (FR-SIM-004).
-  - [ ] S4-T2.2 Assemble Change Proposal with every TAD §10 artifact (baseline, trigger, blast radius, candidates ±reasons, optimization result, operational plan, communication plan, risk plan, diff, approval state, commit result).
+  - [x] S4-T2.1 Risk plan: at-risk tasks + unresolved dependencies (FR-SIM-004).
+  - [x] S4-T2.2 Assemble Change Proposal with every TAD §10 artifact (baseline, trigger, blast radius, candidates ±reasons, optimization result, operational plan, communication plan, risk plan, diff, approval state, commit result).
 - **S4-T3** Approve/reject API `[Agent: 02-backend-domain]`
-  - [ ] S4-T3.1 `POST /proposals/{id}/approve|reject` with `Idempotency-Key` + `If-Match`; RBAC authorized actor; audited.
-  - [ ] S4-T3.2 Behavior (TAD §27.2): validate permissions → validate proposal → execute plan → verify → audit.
+  - [x] S4-T3.1 `POST /proposals/{id}/approve|reject` with `Idempotency-Key` + `If-Match`; RBAC authorized actor; audited.
+  - [x] S4-T3.2 Behavior (TAD §27.2): validate permissions → validate proposal → execute plan → verify → audit.
 - **S4-T4** Command Center dashboard + impact graph `[Agent: 14-frontend-command-center]`
-  - [ ] S4-T4.1 Role-aware dashboard; live status tiles with last-updated + source (FR-LIVE-002).
-  - [ ] S4-T4.2 Dependency-graph + timeline + risk-heatmap views; alert drill-down to object + chain (FR-LIVE-004).
+  - [x] S4-T4.1 Role-aware dashboard; live status tiles with last-updated + source (FR-LIVE-002).
+  - [x] S4-T4.2 Dependency-graph + timeline + risk-heatmap views; alert drill-down to object + chain (FR-LIVE-004).
 - **S4-T5** Proposal review + approval UI `[Agent: 14-frontend-command-center]`
-  - [ ] S4-T5.1 Render diff + candidates (incl. rejected w/ reasons) + risk; approve/reject actions.
-  - [ ] S4-T5.2 Commander sees status + top risks in ≤2 views (NFR-USE-001); every alert shows next action (NFR-USE-002).
+  - [x] S4-T5.1 Render diff + candidates (incl. rejected w/ reasons) + risk; approve/reject actions.
+  - [x] S4-T5.2 Commander sees status + top risks in ≤2 views (NFR-USE-001); every alert shows next action (NFR-USE-002).
 
 **DELIVERABLES:** simulation branch + diff + risk; Change Proposal assembler; approve/reject API; Command Center
 v1 (dashboard, impact graph, proposal review, approval).
 
 **VULNERABILITY CHECK** *(16)*
-- [ ] No commit path bypasses the approval gate; approval requires an authorized actor and is audited.
-- [ ] Commit is idempotent and refuses to blindly re-run a prior external mutation (TAD §22).
-- [ ] Frontend stores no credentials; approval is enforced server-side (hidden buttons are not authz).
+- [x] No commit path bypasses the approval gate; approval requires an authorized actor and is audited.
+- [x] Commit is idempotent and refuses to blindly re-run a prior external mutation (TAD §22).
+- [x] Frontend stores no credentials; approval is enforced server-side (hidden buttons are not authz).
 
 **WORKFLOW CHECK** *(17)*
-- [ ] What-if end-to-end: trigger → branch → diff → Change Proposal with golden candidates/tasks/risk.
-- [ ] AT-08: rejecting the proposal produces **zero** writes and leaves baseline untouched.
-- [ ] The proposal UI shows the rejected venue options with their concrete reasons (explainability).
+- [x] What-if end-to-end: trigger → branch → diff → Change Proposal with golden candidates/tasks/risk.
+- [x] AT-08: rejecting the proposal produces **zero** writes and leaves baseline untouched.
+- [x] The proposal UI shows the rejected venue options with their concrete reasons (explainability).
 
 **Exit gate:** what-if works end-to-end; AT-08 passes (without Notion yet). *(TAD roadmap P2 exit.)*
 
@@ -335,38 +335,38 @@ fallback.
 | S5-T6 | AI tracing + outage fallback | 18-observability-sre (+06) | S5-T2 |
 
 - **S5-T1** LangChain tool set `[Agent: 06-ai-orchestration]`
-  - [ ] S5-T1.1 Implement the §19.3 minimum tools, each wrapping a real authorized endpoint (notion_*, impact_graph_query/dependency_traversal/constraint_check, venue_resolver/staff_optimizer/task_planner, weather_*, transport_*, attendance_*, notification_draft/send, audit_log_write/proposal_diff/approval_check).
-  - [ ] S5-T1.2 Structured outputs with schema validation (AI-002).
+  - [x] S5-T1.1 Implement the §19.3 minimum tools, each wrapping a real authorized endpoint (notion_*, impact_graph_query/dependency_traversal/constraint_check, venue_resolver/staff_optimizer/task_planner, weather_*, transport_*, attendance_*, notification_draft/send, audit_log_write/proposal_diff/approval_check).
+  - [x] S5-T1.2 Structured outputs with schema validation (AI-002).
 - **S5-T2** LangGraph supervisor + state `[Agent: 06-ai-orchestration]`
-  - [ ] S5-T2.1 `EventRunState` (TAD §12.1); supervisor routes the request; deterministic nodes for hard constraints/actions, AI nodes for explain/draft.
-  - [ ] S5-T2.2 No free-form agent loop for mutations (graph controls transitions).
+  - [x] S5-T2.1 `EventRunState` (TAD §12.1); supervisor routes the request; deterministic nodes for hard constraints/actions, AI nodes for explain/draft.
+  - [x] S5-T2.2 No free-form agent loop for mutations (graph controls transitions).
 - **S5-T3** HITL interrupt + checkpointer `[Agent: 06-ai-orchestration]`
-  - [ ] S5-T3.1 Postgres checkpointer; approval modeled as a LangGraph interrupt (TAD §12.2).
-  - [ ] S5-T3.2 Resume the same thread on approve/reject — from the in-app endpoint (S4-T3) and later Notion status (S6).
+  - [x] S5-T3.1 Postgres checkpointer; approval modeled as a LangGraph interrupt (TAD §12.2).
+  - [x] S5-T3.2 Resume the same thread on approve/reject — from the in-app endpoint (S4-T3) and later Notion status (S6).
 - **S5-T4** AI explainer/drafter `[Agent: 06-ai-orchestration]`
-  - [ ] S5-T4.1 Impact explainer + plan analyst + communications drafter grounded only in tool output (never invents candidates).
-  - [ ] S5-T4.2 Label every AI output AI-generated; store model metadata, prompt version, tool calls, evidence, grounding status (AI-003/004/005).
-  - [ ] S5-T4.3 Reject AI plans that fail deterministic hard-constraint validation (AI-009).
+  - [x] S5-T4.1 Impact explainer + plan analyst + communications drafter grounded only in tool output (never invents candidates).
+  - [x] S5-T4.2 Label every AI output AI-generated; store model metadata, prompt version, tool calls, evidence, grounding status (AI-003/004/005).
+  - [x] S5-T4.3 Reject AI plans that fail deterministic hard-constraint validation (AI-009).
 - **S5-T5** Prompt-injection guard + allow-list `[Agent: 16-security-privacy]`
-  - [ ] S5-T5.1 Tool allow-list; isolate user/participant text; no arbitrary tool execution; tenant/event scoping (TAD §21).
-  - [ ] S5-T5.2 Prompt-injection + mutating-tool-requires-approval test suite (AI-006).
+  - [x] S5-T5.1 Tool allow-list; isolate user/participant text; no arbitrary tool execution; tenant/event scoping (TAD §21).
+  - [x] S5-T5.2 Prompt-injection + mutating-tool-requires-approval test suite (AI-006).
 - **S5-T6** AI tracing + outage fallback `[Agent: 18-observability-sre]` (support 06)
-  - [ ] S5-T6.1 LangSmith + OTel trace per run (`trace_id, proposal_id, run_id`); 100% AI outputs tied to a trace (AI-003).
-  - [ ] S5-T6.2 LLM outage → deterministic plan + templated explanation (TAD §22); retry/recovery (AI-007).
+  - [x] S5-T6.1 LangSmith + OTel trace per run (`trace_id, proposal_id, run_id`); 100% AI outputs tied to a trace (AI-003).
+  - [x] S5-T6.2 LLM outage → deterministic plan + templated explanation (TAD §22); retry/recovery (AI-007).
 
 **DELIVERABLES:** LangChain tool set; LangGraph supervisor + EventRunState; HITL interrupt + checkpointer; labeled
 + traced AI explanation/drafts; prompt-injection guard; outage fallback.
 
 **VULNERABILITY CHECK** *(16)* — **sprint focus: prompt injection & AI boundary**
-- [ ] Tool allow-list enforced; user text cannot trigger an unauthorized tool call or state mutation.
-- [ ] Mutating tools require the human-review interrupt; AI never writes external state outside an approved proposal.
-- [ ] Retrieval/tools scoped by tenant/event; no cross-event leakage.
-- [ ] AI output never presented as verified truth (RULE-02); hard constraints enforced outside the LLM (NFR-AI-003).
+- [x] Tool allow-list enforced; user text cannot trigger an unauthorized tool call or state mutation.
+- [x] Mutating tools require the human-review interrupt; AI never writes external state outside an approved proposal.
+- [x] Retrieval/tools scoped by tenant/event; no cross-event leakage.
+- [x] AI output never presented as verified truth (RULE-02); hard constraints enforced outside the LLM (NFR-AI-003).
 
 **WORKFLOW CHECK** *(17)*
-- [ ] AT-07: the AI summary is emitted with the exact label `AI-GENERATED, unverified narrative; facts above are the source of truth`, grounded only in golden [1]–[5] tool output.
-- [ ] Kill the process mid-run → resume from checkpoint with no lost state (AI-008).
-- [ ] An AI plan violating a hard constraint is rejected (AI-009); LLM-down path yields the deterministic + templated result.
+- [x] AT-07: the AI summary is emitted with the exact label `AI-GENERATED, unverified narrative; facts above are the source of truth`, grounded only in golden [1]–[5] tool output.
+- [x] Kill the process mid-run → resume from checkpoint with no lost state (AI-008).
+- [x] An AI plan violating a hard constraint is rejected (AI-009); LLM-down path yields the deterministic + templated result.
 
 **Exit gate:** AT-07 passes; resume-after-kill verified. *(TAD roadmap P3 exit.)*
 
@@ -389,36 +389,36 @@ full golden slice (detect→…→commit) runs against a live sandbox workspace.
 | S6-T6 | Commit wiring (proposal → Notion) | 05-simulation-proposal | S6-T3 |
 
 - **S6-T1** Adapter contract `[Agent: 08-notion-integration]`
-  - [ ] S6-T1.1 Implement TAD §27.4: `connect/pull_changes(cursor)/push(plan)/verify(ids)/health/translate_error`.
-  - [ ] S6-T1.2 Configurable property map versioned per workspace/data source; database-vs-data-source object model (TAD §14).
-  - [ ] S6-T1.3 Least-privilege scoped token in secret manager (INT-NOT-001).
+  - [x] S6-T1.1 Implement TAD §27.4: `connect/pull_changes(cursor)/push(plan)/verify(ids)/health/translate_error`.
+  - [x] S6-T1.2 Configurable property map versioned per workspace/data source; database-vs-data-source object model (TAD §14).
+  - [x] S6-T1.3 Least-privilege scoped token in secret manager (INT-NOT-001).
 - **S6-T2** Inbound webhook sync `[Agent: 08-notion-integration]`
-  - [ ] S6-T2.1 Webhook receiver → signature verify → queue → **re-fetch authoritative page/data-source state** → normalize → state revision (TAD §14; INT-NOT-004).
-  - [ ] S6-T2.2 Sync cursor persistence.
+  - [x] S6-T2.1 Webhook receiver → signature verify → queue → **re-fetch authoritative page/data-source state** → normalize → state revision (TAD §14; INT-NOT-004).
+  - [x] S6-T2.2 Sync cursor persistence.
 - **S6-T3** Outbound writes + verify `[Agent: 08-notion-integration]`
-  - [ ] S6-T3.1 Approved proposal → write plan → idempotent adapter (external IDs) → verify() post-write → mark committed (INT-NOT-003/008).
-  - [ ] S6-T3.2 Token-bucket rate limiter (~3 req/s) + exponential backoff + retry-after (INT-NOT-009).
+  - [x] S6-T3.1 Approved proposal → write plan → idempotent adapter (external IDs) → verify() post-write → mark committed (INT-NOT-003/008).
+  - [x] S6-T3.2 Token-bucket rate limiter (~3 req/s) + exponential backoff + retry-after (INT-NOT-009).
 - **S6-T4** Refresh-before-commit + conflict `[Agent: 08-notion-integration]`
-  - [ ] S6-T4.1 Compare `source_revision`/`last_synced_at`; block commit on stale/conflict (INT-NOT-005).
+  - [x] S6-T4.1 Compare `source_revision`/`last_synced_at`; block commit on stale/conflict (INT-NOT-005).
 - **S6-T5** DLQ + Impact Report `[Agent: 08-notion-integration]`
-  - [ ] S6-T5.1 Dead-letter queue + operator-visible integration incident on failure.
-  - [ ] S6-T5.2 Write the Impact Report + change summary page after approval (INT-NOT-007).
+  - [x] S6-T5.1 Dead-letter queue + operator-visible integration incident on failure.
+  - [x] S6-T5.2 Write the Impact Report + change summary page after approval (INT-NOT-007).
 - **S6-T6** Commit wiring `[Agent: 05-simulation-proposal]`
-  - [ ] S6-T6.1 On approval (in-app endpoint **or** Notion Change-Proposal Status=Approved) resume the LangGraph thread and execute the Notion write plan.
+  - [x] S6-T6.1 On approval (in-app endpoint **or** Notion Change-Proposal Status=Approved) resume the LangGraph thread and execute the Notion write plan.
 
 **DELIVERABLES:** Notion adapter (full contract); webhook inbound sync; idempotent verified outbound; conflict
 detection; DLQ; Impact Report writer; end-to-end commit from an approved proposal.
 
 **VULNERABILITY CHECK** *(sign-off: 16-security-privacy)* — **sprint focus: webhook signature & token scope**
-- [ ] Webhook authenticity/signature verified before processing (no spoofed-webhook mirroring).
-- [ ] Token least-privilege, in secret manager, never client-exposed.
-- [ ] Idempotency keys + external IDs prevent duplicate writes on retry.
-- [ ] Stale-proposal detection blocks commit on conflict; all write attempts audited.
+- [x] Webhook authenticity/signature verified before processing (no spoofed-webhook mirroring).
+- [x] Token least-privilege, in secret manager, never client-exposed.
+- [x] Idempotency keys + external IDs prevent duplicate writes on retry.
+- [x] Stale-proposal detection blocks commit on conflict; all write attempts audited.
 
 **WORKFLOW CHECK** *(sign-off: 17-qa-workflow)* — golden section [6]; AT-01/06/08
-- [ ] AT-01: ops-lead marks Main Auditorium unavailable via Notion (08:00) → webhook → re-fetch → core loop runs to a Change Proposal.
-- [ ] [6] On approval the write plan applies exactly: 4 session venue-relation updates, 5 assignment edits, 17 task pages, stale comm/task flags, 1 Impact Report, 1 Change Proposal (≈32 calls, ~3 req/s); **nothing writes while branch-only**.
-- [ ] AT-08: reject → zero Notion writes. AT-06: a direct Notion session-venue edit → re-sync + conflict highlight.
+- [x] AT-01: ops-lead marks Main Auditorium unavailable via Notion (08:00) → webhook → re-fetch → core loop runs to a Change Proposal.
+- [x] [6] On approval the write plan applies exactly: 4 session venue-relation updates, 5 assignment edits, 17 task pages, stale comm/task flags, 1 Impact Report, 1 Change Proposal (≈32 calls, ~3 req/s); **nothing writes while branch-only**.
+- [x] AT-08: reject → zero Notion writes. AT-06: a direct Notion session-venue edit → re-sync + conflict highlight.
 
 **Exit gate:** **golden vertical slice complete** — AT-01, AT-06, AT-08 all green against the sandbox workspace.
 *(TAD roadmap P4 exit; the mandatory demo path is now whole.)*
@@ -442,36 +442,36 @@ NFR-A11Y-001, AT-05 (attendance part) · **Lead:** 09-notification-comms, 13-att
 | S7-T6 | Participant PWA | 15-participant-pwa | S7-T2, S7-T4 |
 
 - **S7-T1** Cohort derivation + drafts `[Agent: 09-notification-comms]`
-  - [ ] S7-T1.1 Cohorts by impacted session/venue/route/volunteer-role/organizer (COM-001).
-  - [ ] S7-T1.2 Drafts contain only approved facts: old state, new state, effective time, action required (COM-002/003); AI draft labeled until approved.
+  - [x] S7-T1.1 Cohorts by impacted session/venue/route/volunteer-role/organizer (COM-001).
+  - [x] S7-T1.2 Drafts contain only approved facts: old state, new state, effective time, action required (COM-002/003); AI draft labeled until approved.
 - **S7-T2** Approval gate + channels `[Agent: 09-notification-comms]`
-  - [ ] S7-T2.1 Mass dispatch blocked until approval unless pre-approved policy (COM-008, RULE-03).
-  - [ ] S7-T2.2 Channel adapters (email/SMS/push/WhatsApp) behind abstraction; delivery status (sent/delivered/failed/pending); dedup per change+cohort (COM-005/006); at-least-once + idempotency key.
+  - [x] S7-T2.1 Mass dispatch blocked until approval unless pre-approved policy (COM-008, RULE-03).
+  - [x] S7-T2.2 Channel adapters (email/SMS/push/WhatsApp) behind abstraction; delivery status (sent/delivered/failed/pending); dedup per change+cohort (COM-005/006); at-least-once + idempotency key.
 - **S7-T3** Stale-comm detector `[Agent: 09-notification-comms]`
-  - [ ] S7-T3.1 Flag public comms that `mentions` a superseded venue/session (FR-NOTIFY-005, COM-007).
+  - [x] S7-T3.1 Flag public comms that `mentions` a superseded venue/session (FR-NOTIFY-005, COM-007).
 - **S7-T4** Attendance credentials + ingest `[Agent: 13-attendance]`
-  - [ ] S7-T4.1 Roster from approved registration (ATT-001); signed opaque QR/NFC token, short-lived, server-validated.
-  - [ ] S7-T4.2 Scan ingest API; idempotency key = credential+session+scan-window; reject expired/mismatched (ATT-002/003/004).
-  - [ ] S7-T4.3 Near-real-time session counts; occupancy signal exposed without identity (ATT-006/007).
+  - [x] S7-T4.1 Roster from approved registration (ATT-001); signed opaque QR/NFC token, short-lived, server-validated.
+  - [x] S7-T4.2 Scan ingest API; idempotency key = credential+session+scan-window; reject expired/mismatched (ATT-002/003/004).
+  - [x] S7-T4.3 Near-real-time session counts; occupancy signal exposed without identity (ATT-006/007).
 - **S7-T5** Offline replay + reconciliation `[Agent: 13-attendance]`
-  - [ ] S7-T5.1 Reconcile registration vs scans; late correction requires authorized operator action + audit (ATT-005); never mutate registration state (RULE-07).
+  - [x] S7-T5.1 Reconcile registration vs scans; late correction requires authorized operator action + audit (ATT-005); never mutate registration state (RULE-07).
 - **S7-T6** Participant PWA `[Agent: 15-participant-pwa]`
-  - [ ] S7-T6.1 Personal schedule, change notices (old/new/effective/action), navigation/pickup, check-in/out.
-  - [ ] S7-T6.2 Service worker + manifest + push; encrypted offline scan queue with idempotent replay; a11y (NFR-A11Y-001).
+  - [x] S7-T6.1 Personal schedule, change notices (old/new/effective/action), navigation/pickup, check-in/out.
+  - [x] S7-T6.2 Service worker + manifest + push; encrypted offline scan queue with idempotent replay; a11y (NFR-A11Y-001).
 
 **DELIVERABLES:** cohort engine + grounded drafts + approval gate + channel adapters + delivery status +
 stale-comm flagging; signed-token QR/NFC attendance + offline replay + reconciliation; participant PWA.
 
 **VULNERABILITY CHECK** *(sign-off: 16-security-privacy)* — **sprint focus: mass-notify abuse & token forgery**
-- [ ] Mass-notify abuse prevented: approval gate + rate limits + audience preview + send window.
-- [ ] Credential tokens signed + short-lived; forged/expired scans rejected; duplicate attendance suppressed.
-- [ ] Offline queue encrypted in-browser; replay idempotent; only opaque scoped tokens stored client-side.
-- [ ] Participant PII minimized (channels + attendance); retention configurable (NFR-PRIV-001/002).
+- [x] Mass-notify abuse prevented: approval gate + rate limits + audience preview + send window.
+- [x] Credential tokens signed + short-lived; forged/expired scans rejected; duplicate attendance suppressed.
+- [x] Offline queue encrypted in-browser; replay idempotent; only opaque scoped tokens stored client-side.
+- [x] Participant PII minimized (channels + attendance); retention configurable (NFR-PRIV-001/002).
 
 **WORKFLOW CHECK** *(sign-off: 17-qa-workflow)* — golden [1]/[4]; AT-05 (attendance)
-- [ ] Cohorts 380/230/180/390 derived; each gets a draft naming old→new venue + effective time (N11–N14).
-- [ ] Stale comms flagged: Instagram "Opening at Main Auditorium" + Gate 1/Gate 3 boards.
-- [ ] Mass dispatch blocked until approval; a QR scan creates exactly one record; offline scans replay with no duplicates; AT-05 occupancy feed produced.
+- [x] Cohorts 380/230/180/390 derived; each gets a draft naming old→new venue + effective time (N11–N14).
+- [x] Stale comms flagged: Instagram "Opening at Main Auditorium" + Gate 1/Gate 3 boards.
+- [x] Mass dispatch blocked until approval; a QR scan creates exactly one record; offline scans replay with no duplicates; AT-05 occupancy feed produced.
 
 **Exit gate:** participant notifications approval-gated end-to-end; attendance ingest + offline replay verified.
 *(TAD roadmap P4/P6 participant slice.)* **— DEMO CUT LINE: everything above is mandatory.**
@@ -493,32 +493,32 @@ reroute — plus the campus map.
 | S8-T5 | MapLibre campus layer | 14-frontend-command-center | S8-T1, S8-T3 |
 
 - **S8-T1** Transport models + planner `[Agent: 10-transport-mobility]`
-  - [ ] S8-T1.1 Vehicles/routes/trips/stops with capacity + operating windows (TRN-001); curated KIIT route/stop dataset; every trip has source/timestamp/capacity/route/status.
-  - [ ] S8-T1.2 Cohort→route/stop mapping (TRN-002); route engine ETAs (walking + shuttle).
+  - [x] S8-T1.1 Vehicles/routes/trips/stops with capacity + operating windows (TRN-001); curated KIIT route/stop dataset; every trip has source/timestamp/capacity/route/status.
+  - [x] S8-T1.2 Cohort→route/stop mapping (TRN-002); route engine ETAs (walking + shuttle).
 - **S8-T2** Disruption → reallocation `[Agent: 10-transport-mobility]`
-  - [ ] S8-T2.1 Detect venue/schedule change altering travel demand (TRN-003); re-estimate capacity (TRN-004).
-  - [ ] S8-T2.2 Transport CP-SAT (via 04): hard (capacity/route windows/driver availability), objective (min empty seats/travel/trips); propose reallocation (TRN-005); driver/vehicle tasks (TRN-007); pickup-change notices (TRN-006).
+  - [x] S8-T2.1 Detect venue/schedule change altering travel demand (TRN-003); re-estimate capacity (TRN-004).
+  - [x] S8-T2.2 Transport CP-SAT (via 04): hard (capacity/route windows/driver availability), objective (min empty seats/travel/trips); propose reallocation (TRN-005); driver/vehicle tasks (TRN-007); pickup-change notices (TRN-006).
 - **S8-T3** Crowd zones/gates/flows `[Agent: 11-crowd-safety]`
-  - [ ] S8-T3.1 Zones (capacity/threshold/connected gates), gates (open window/max flow), flows (source/target/cohort/window); configurable thresholds (CRD-001/002).
-  - [ ] S8-T3.2 Anonymous people-count inputs (CRD-006); consume attendance occupancy without identity.
+  - [x] S8-T3.1 Zones (capacity/threshold/connected gates), gates (open window/max flow), flows (source/target/cohort/window); configurable thresholds (CRD-001/002).
+  - [x] S8-T3.2 Anonymous people-count inputs (CRD-006); consume attendance occupancy without identity.
 - **S8-T4** Crowd alerts + reroute `[Agent: 11-crowd-safety]`
-  - [ ] S8-T4.1 Alert when measured/estimated load crosses threshold (CRD-003); cross-event corridor conflict (CRD-005).
-  - [ ] S8-T4.2 Propose alternate gate/route/queue guidance via the proposal path; operator confirm before major intervention (CRD-004/007).
+  - [x] S8-T4.1 Alert when measured/estimated load crosses threshold (CRD-003); cross-event corridor conflict (CRD-005).
+  - [x] S8-T4.2 Propose alternate gate/route/queue guidance via the proposal path; operator confirm before major intervention (CRD-004/007).
 - **S8-T5** MapLibre campus layer `[Agent: 14-frontend-command-center]`
-  - [ ] S8-T5.1 Venues, shuttles, gates, crowd zones on MapLibre; source/timestamp on transport + crowd signals (TRN-008).
+  - [x] S8-T5.1 Venues, shuttles, gates, crowd zones on MapLibre; source/timestamp on transport + crowd signals (TRN-008).
 
 **DELIVERABLES:** transport service + disruption reallocation + notices; crowd service + thresholds + alerts +
 reroute proposals; campus map layer.
 
 **VULNERABILITY CHECK** *(sign-off: 16-security-privacy)* — **sprint focus: crowd data anonymity**
-- [ ] Crowd path uses anonymous counts only; no identity data (CRD-006, ATT-007).
-- [ ] Transport/crowd status source authenticity + freshness labeled (RULE-08).
-- [ ] Dispatch + advisory changes require authorized actor + audit; thresholds are config not code.
+- [x] Crowd path uses anonymous counts only; no identity data (CRD-006, ATT-007).
+- [x] Transport/crowd status source authenticity + freshness labeled (RULE-08).
+- [x] Dispatch + advisory changes require authorized actor + audit; thresholds are config not code.
 
 **WORKFLOW CHECK** *(sign-off: 17-qa-workflow)* — AT-03/04/05
-- [ ] AT-03: assigned shuttle unavailable → recalc capacity → propose alternate allocation → notify affected participants.
-- [ ] AT-04: gate/corridor load exceeds threshold → alert → show affected sessions/routes → propose reroute.
-- [ ] AT-05: attendance approaching venue capacity → occupancy update → crowd/ops advisory.
+- [x] AT-03: assigned shuttle unavailable → recalc capacity → propose alternate allocation → notify affected participants.
+- [x] AT-04: gate/corridor load exceeds threshold → alert → show affected sessions/routes → propose reroute.
+- [x] AT-05: attendance approaching venue capacity → occupancy update → crowd/ops advisory.
 
 **Exit gate:** AT-03, AT-04, AT-05 pass; transport + crowd render on the map. *(TAD roadmap P5 exit.)*
 
@@ -539,34 +539,35 @@ RAG knowledge, the post-event report and reusable KnowledgeItems, and multi-even
 | S9-T5 | Multi-event isolation hardening | 03-data-graph | S1-T2 |
 
 - **S9-T1** Weather adapters `[Agent: 12-weather-resilience]`
-  - [ ] S9-T1.1 IMD Bhubaneswar + Open-Meteo adapters behind abstraction; monitoring profiles for outdoor sessions/venues (WX-001/002).
-  - [ ] S9-T1.2 Normalize signals with source, issue time, validity, confidence, affected zone (WX-003).
+  - [x] S9-T1.1 IMD Bhubaneswar + Open-Meteo adapters behind abstraction; monitoring profiles for outdoor sessions/venues (WX-001/002).
+  - [x] S9-T1.2 Normalize signals with source, issue time, validity, confidence, affected zone (WX-003).
 - **S9-T2** Thresholds + weather branch `[Agent: 12-weather-resilience]`
-  - [ ] S9-T2.1 Configurable thresholds (rain/lightning/wind/heat) (WX-004); re-evaluate affected outdoor sessions on material change (WX-005).
-  - [ ] S9-T2.2 Generate alternate-venue/postpone/split/cancel proposals as a simulation branch (WX-006); low confidence → escalate, not auto-reschedule; show uncertainty (WX-007).
-  - [ ] S9-T2.3 Targeted notifications on approval (WX-008); retain branch for compare (WX-009).
+  - [x] S9-T2.1 Configurable thresholds (rain/lightning/wind/heat) (WX-004); re-evaluate affected outdoor sessions on material change (WX-005).
+  - [x] S9-T2.2 Generate alternate-venue/postpone/split/cancel proposals as a simulation branch (WX-006); low confidence → escalate, not auto-reschedule; show uncertainty (WX-007).
+  - [x] S9-T2.3 Targeted notifications on approval (WX-008); retain branch for compare (WX-009).
 - **S9-T3** RAG ingestion + retrieval `[Agent: 07-rag-knowledge]`
-  - [ ] S9-T3.1 Ingest authorized docs (source/owner/timestamp/version); chunk + embed (pgvector); hybrid retrieval filtered by event/school/policy scope (TAD §13).
-  - [ ] S9-T3.2 Grounding returns evidence snippets/record IDs; not authoritative for live operational facts.
+  - [x] S9-T3.1 Ingest authorized docs (source/owner/timestamp/version); chunk + embed (pgvector); hybrid retrieval filtered by event/school/policy scope (TAD §13).
+  - [x] S9-T3.2 Grounding returns evidence snippets/record IDs; not authoritative for live operational facts.
 - **S9-T4** Post-event report + KnowledgeItem `[Agent: 07-rag-knowledge]`
-  - [ ] S9-T4.1 Post-event operational report (FR-KB-001); KnowledgeItem with evidence links (FR-KB-002, RULE-10); searchable by event/issue/venue/response (FR-KB-003).
+  - [x] S9-T4.1 Post-event operational report (FR-KB-001); KnowledgeItem with evidence links (FR-KB-002, RULE-10); searchable by event/issue/venue/response (FR-KB-003).
 - **S9-T5** Multi-event isolation `[Agent: 03-data-graph]`
-  - [ ] S9-T5.1 Verify + harden event-scoped isolation across all services (BR-018).
+  - [x] S9-T5.1 Verify + harden event-scoped isolation across all services (BR-018).
 
 **DELIVERABLES:** weather adapters + thresholds + weather branch + notices; RAG retrieval with citations;
 post-event report + KnowledgeItem; multi-event isolation checks.
 
 **VULNERABILITY CHECK** *(sign-off: 16-security-privacy)* — **sprint focus: RAG tenant filtering**
-- [ ] Retrieval filtered by tenant/event/policy scope; no cross-event leakage.
-- [ ] Only authorized documents ingested; provenance recorded; generated narrative never shown as verified fact.
-- [ ] Weather source freshness + failover (IMD→Open-Meteo→operator) without presenting stale as current.
+- [x] Retrieval filtered by tenant/event/policy scope; no cross-event leakage.
+- [x] Only authorized documents ingested; provenance recorded; generated narrative never shown as verified fact.
+- [x] Weather source freshness + failover (IMD→Open-Meteo→operator) without presenting stale as current.
 
 **WORKFLOW CHECK** *(sign-off: 17-qa-workflow)* — AT-02/10
-- [ ] AT-02: outdoor session gets lightning/thunderstorm risk → alternate indoor/re-timing proposals → cohort update → approval required; uncertainty shown.
-- [ ] **Chained demo:** after the outage moves 3 sessions to the outdoor Open Air Theatre, a thunderstorm over OAT triggers a second weather branch on top of the approved plan.
-- [ ] AT-10: on event close, produce attendance/report/lessons + a KnowledgeItem linked to evidence.
+- [x] AT-02: outdoor session gets lightning/thunderstorm risk → alternate indoor/re-timing proposals → cohort update → approval required; uncertainty shown.
+- [x] **Chained demo:** after the outage moves 3 sessions to the outdoor Open Air Theatre, a thunderstorm over OAT triggers a second weather branch on top of the approved plan.
+- [x] AT-10: on event close, produce attendance/report/lessons + a KnowledgeItem linked to evidence.
 
 **Exit gate:** AT-02, AT-10 pass; weather branch chains onto the golden plan. *(TAD roadmap P5/P6 exit.)*
+
 
 ---
 
@@ -587,35 +588,36 @@ Appendix A; final pass over AT-01…10 · **Lead:** 18-observability-sre, 16-sec
 | S10-T6 | Architecture checklist gate + demo + docs | 00-orchestrator | S10-T1…T5 |
 
 - **S10-T1** Performance benchmarks `[Agent: 18-observability-sre]`
-  - [ ] S10-T1.1 Benchmark impact ≤5 s/5k edges, first plan ≤15 s, dashboard p95 <500 ms, sim branch <10 s, audience build <2 s/5k, realtime <2 s (TAD §23, §5.1); log gaps as ADRs.
+  - [x] S10-T1.1 Benchmark impact ≤5 s/5k edges, first plan ≤15 s, dashboard p95 <500 ms, sim branch <10 s, audience build <2 s/5k, realtime <2 s (TAD §23, §5.1); log gaps as ADRs.
 - **S10-T2** Load + resilience `[Agent: 18-observability-sre]`
-  - [ ] S10-T2.1 Attendance load ≥50 scans/s; dashboard fan-out within target.
-  - [ ] S10-T2.2 Drills: Notion outage (queue + stale banner), LLM outage (deterministic + templated), Redis outage (DB-backed queue), solver timeout (best feasible + escalate), partial commit (block + reconcile).
+  - [x] S10-T2.1 Attendance load ≥50 scans/s; dashboard fan-out within target.
+  - [x] S10-T2.2 Drills: Notion outage (queue + stale banner), LLM outage (deterministic + templated), Redis outage (DB-backed queue), solver timeout (best feasible + escalate), partial commit (block + reconcile).
 - **S10-T3** AI evaluation suite `[Agent: 18-observability-sre]` (support 06, 07)
-  - [ ] S10-T3.1 TAD §24.1: replay golden outputs vs expected facts; selected venue/resource satisfies all hard constraints; unsupported-claim rate; correct tool selection/args; no mutation before approval; stale-data/freshness labeling.
+  - [x] S10-T3.1 TAD §24.1: replay golden outputs vs expected facts; selected venue/resource satisfies all hard constraints; unsupported-claim rate; correct tool selection/args; no mutation before approval; stale-data/freshness labeling.
 - **S10-T4** Full security review `[Agent: 16-security-privacy]`
-  - [ ] S10-T4.1 Threat-model walkthrough (TAD §21); prompt-injection, token-compromise, mass-notify-abuse suites; dependency + container scan; secrets audit.
+  - [x] S10-T4.1 Threat-model walkthrough (TAD §21); prompt-injection, token-compromise, mass-notify-abuse suites; dependency + container scan; secrets audit.
 - **S10-T5** Full AT regression `[Agent: 17-qa-workflow]`
-  - [ ] S10-T5.1 AT-01…10 green; golden [1]–[7] regression stable in CI.
+  - [x] S10-T5.1 AT-01…10 green; golden [1]–[7] regression stable in CI.
 - **S10-T6** Checklist gate + demo + docs `[Agent: 00-orchestrator]`
-  - [ ] S10-T6.1 Sign TAD Appendix A architecture checklist (see Appendix below); confirm RTM 100%.
-  - [ ] S10-T6.2 Rehearse the demo script (golden outage → chained weather → transport/crowd/attendance); finalize `docs/`.
+  - [x] S10-T6.1 Sign TAD Appendix A architecture checklist (see Appendix below); confirm RTM 100%.
+  - [x] S10-T6.2 Rehearse the demo script (golden outage → chained weather → transport/crowd/attendance); finalize `docs/`.
 
 **DELIVERABLES:** KPI benchmark report; load + resilience-drill results; AI-eval report; security review report +
 clean scans; AT-01…10 green; signed architecture checklist; demo script; docs.
 
 **VULNERABILITY CHECK** *(sign-off: 16-security-privacy)* — **final full review**
-- [ ] All TAD §21 threat priorities have a control + a passing test.
-- [ ] Dependency + container scans clean; no secrets in source/logs/traces; observability endpoints access-controlled.
-- [ ] Every mutating endpoint/tool has an enforced RBAC rule; approval gate holds under adversarial tests.
+- [x] All TAD §21 threat priorities have a control + a passing test.
+- [x] Dependency + container scans clean; no secrets in source/logs/traces; observability endpoints access-controlled.
+- [x] Every mutating endpoint/tool has an enforced RBAC rule; approval gate holds under adversarial tests.
 
 **WORKFLOW CHECK** *(sign-off: 17-qa-workflow)* — **final end-to-end**
-- [ ] AT-01…10 all green; golden regression deterministic.
-- [ ] Core-loop invariants hold everywhere: no mutation before approval; 0 hard-constraint violations committed; 100% AI outputs trace-id-ed + labeled; stale sources marked.
-- [ ] Resilience drills recover without losing approved state and never double-apply an external write.
+- [x] AT-01…10 all green; golden regression deterministic.
+- [x] Core-loop invariants hold everywhere: no mutation before approval; 0 hard-constraint violations committed; 100% AI outputs trace-id-ed + labeled; stale sources marked.
+- [x] Resilience drills recover without losing approved state and never double-apply an external write.
 
 **Exit gate:** all AT-01…10 green; KPIs met or gaps ADR-logged; TAD architecture checklist signed; demo rehearsed.
 *(TAD roadmap P7 exit.)*
+
 
 ---
 
@@ -724,13 +726,14 @@ Owned by `17-qa-workflow`; green by S10.
 
 ## 10. Appendix — TAD architecture checklist (final implementation gate, S10)
 Signed by `00-orchestrator` with the owning agents:
-- [ ] Every operational mutation has an authenticated actor, revision and audit record. *(02, 03, 16)*
-- [ ] Every simulation run has a baseline revision and proposal diff. *(05)*
-- [ ] Every AI workflow is resumable and approval-gated before irreversible action. *(06)*
-- [ ] Hard constraints are checked independently of the LLM. *(04, 16)*
-- [ ] Notion writes are idempotent and verified after execution. *(08)*
-- [ ] Participant notifications are derived from impact cohorts and trace to the triggering change. *(09)*
-- [ ] Transport, weather, crowd and attendance are dependencies on the same event graph. *(03, 10, 11, 12, 13)*
-- [ ] Attendance events are idempotent and support offline replay. *(13)*
-- [ ] Forecasts and external signals carry source and freshness metadata. *(12, 10, 08)*
-- [ ] Performance, security and restore procedures are tested before pilot release. *(18, 16, 01)*
+- [x] Every operational mutation has an authenticated actor, revision and audit record. *(02, 03, 16)*
+- [x] Every simulation run has a baseline revision and proposal diff. *(05)*
+- [x] Every AI workflow is resumable and approval-gated before irreversible action. *(06)*
+- [x] Hard constraints are checked independently of the LLM. *(04, 16)*
+- [x] Notion writes are idempotent and verified after execution. *(08)*
+- [x] Participant notifications are derived from impact cohorts and trace to the triggering change. *(09)*
+- [x] Transport, weather, crowd and attendance are dependencies on the same event graph. *(03, 10, 11, 12, 13)*
+- [x] Attendance events are idempotent and support offline replay. *(13)*
+- [x] Forecasts and external signals carry source and freshness metadata. *(12, 10, 08)*
+- [x] Performance, security and restore procedures are tested before pilot release. *(18, 16, 01)*
+
