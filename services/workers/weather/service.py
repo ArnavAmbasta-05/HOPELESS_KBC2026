@@ -14,6 +14,8 @@ from packages.contracts.weather import (
     WeatherThresholdConfig,
 )
 
+import httpx
+
 logger = logging.getLogger("korex.weather")
 
 
@@ -24,6 +26,33 @@ class WeatherService:
         self.thresholds = thresholds or WeatherThresholdConfig()
         self.active_signals: list[WeatherSignal] = []
         self.generated_branches: list[WeatherBranchProposal] = []
+
+    async def fetch_live_bhubaneswar_weather(self) -> WeatherSignal:
+        """Fetches live meteorological telemetry for KIIT Bhubaneswar (20.3540 N, 85.8180 E)."""
+        url = "https://api.open-meteo.com/v1/forecast?latitude=20.3540&longitude=85.8180&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&timezone=Asia%2FKolkata"
+        try:
+            async with httpx.AsyncClient(timeout=6.0) as client:
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    data = resp.json().get("current", {})
+                    return self.normalize_openmeteo_feed({
+                        "zone": "campus_6_oat",
+                        "precipitation": data.get("precipitation", 0.0),
+                        "wind_speed_10m": data.get("wind_speed_10m", 8.0),
+                        "temperature_2m": data.get("temperature_2m", 28.5),
+                        "cape_lightning_index": 5,
+                    })
+        except Exception as exc:
+            logger.warning("Live weather fetch fallback: %s", exc)
+
+        # Fallback to standard clear-sky signal
+        return self.normalize_openmeteo_feed({
+            "zone": "campus_6_oat",
+            "precipitation": 0.0,
+            "wind_speed_10m": 8.0,
+            "temperature_2m": 29.0,
+            "cape_lightning_index": 0,
+        })
 
     def normalize_imd_feed(self, raw_imd: dict[str, Any]) -> WeatherSignal:
         """Normalizes raw IMD Met Centre Bhubaneswar payload to standard WeatherSignal (WX-003)."""

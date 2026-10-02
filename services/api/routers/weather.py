@@ -42,6 +42,12 @@ class GenerateWeatherBranchRequest(BaseModel):
     backup_indoor_venues: list[dict[str, Any]] = Field(default_factory=list)
 
 
+@router.get("/live-bhubaneswar", response_model=WeatherSignal)
+async def get_live_bhubaneswar_weather() -> WeatherSignal:
+    """Fetches real-time live satellite weather telemetry for KIIT Campus 6 (Patia, Bhubaneswar)."""
+    return await weather_service.fetch_live_bhubaneswar_weather()
+
+
 @router.post("/ingest/imd", response_model=WeatherSignal)
 async def ingest_imd_feed(req: IMDIngestRequest) -> WeatherSignal:
     """Ingests and normalizes an IMD Met Centre Bhubaneswar weather update (WX-003)."""

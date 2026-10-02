@@ -21,15 +21,15 @@ class NotionWorkspaceConfig:
         database_mappings: Mapping of domain entity type to Notion database ID.
     """
 
-    workspace_id: str
+    workspace_id: str = "ws_notion_kbc2026_sandbox"
     token_env_var: str = "NOTION_API_TOKEN"
     schema_version: str = "v1.0"
     database_mappings: dict[str, str] = field(default_factory=dict)
 
     @property
     def api_token(self) -> str | None:
-        """Retrieve token from configured environment variable."""
-        return os.environ.get(self.token_env_var)
+        """Retrieve token from configured environment variable or fallback."""
+        return os.environ.get(self.token_env_var) or os.environ.get("NOTION_API_KEY") or os.environ.get("NOTION_API_TOKEN")
 
 
 # Canonical entity types for Notion synchronization
@@ -66,3 +66,5 @@ SANDBOX_NOTION_CONFIG: Final[NotionWorkspaceConfig] = NotionWorkspaceConfig(
 def get_sandbox_notion_config() -> NotionWorkspaceConfig:
     """Return the default sandbox Notion workspace configuration."""
     return SANDBOX_NOTION_CONFIG
+
+

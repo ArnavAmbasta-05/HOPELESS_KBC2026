@@ -1,11 +1,4 @@
-"""AI Explainer and Hard Constraint Validator (S5-T4, AI-003..005, AI-009, AT-07, BR-014).
-
-Generates grounded AI narratives with explicit disclaimer banners.
-Validates proposed candidate plans against hard constraints before admitting them into the proposal.
-"""
-
-from __future__ import annotations
-
+import os
 from typing import Any
 from pydantic import BaseModel, Field
 
@@ -19,7 +12,7 @@ class AIExplanationResult(BaseModel):
     is_ai_generated: bool = True
     grounding_sources: list[str] = Field(default_factory=list)
     confidence_score: float = 0.98
-    model_name: str = "gemini-1.5-pro"
+    model_name: str = "gemini-flash-latest"
     prompt_version: str = "v1.0"
 
 
@@ -37,6 +30,7 @@ class AIExplainer:
         relocated_sessions: list[dict[str, Any]],
         at_risk_tasks: list[dict[str, Any]],
         volunteer_changes_count: int,
+        use_live_gemini: bool = False,
     ) -> AIExplanationResult:
         """Synthesize concise explanation strictly grounded in deterministic tool facts."""
         sessions_summary = ", ".join(s.get("name", "") for s in relocated_sessions)
@@ -48,6 +42,31 @@ class AIExplainer:
             f"{volunteer_changes_count} volunteer shifts changed; {at_risk_summary}."
         )
 
+        model_name = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+
+        if use_live_gemini and api_key:
+            try:
+                import httpx
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                prompt = (
+                    f"You are the KoreX KIIT Event Operations AI Supervisor. "
+                    f"Synthesize an executive briefing for the Event Commander using these grounded facts only:\n"
+                    f"- Trigger: {trigger_reason}\n"
+                    f"- Relocated Sessions: {sessions_summary}\n"
+                    f"- Volunteer Changes: {volunteer_changes_count} shifts adjusted\n"
+                    f"- At-risk Tasks: {at_risk_summary}\n"
+                    f"Keep it under 3 concise sentences."
+                )
+                with httpx.Client(timeout=8.0) as client:
+                    resp = client.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+                    if resp.status_code == 200:
+                        gen_text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                        if gen_text:
+                            narrative = gen_text
+            except Exception:
+                pass
+
         return AIExplanationResult(
             summary_text=narrative,
             label=AI_SUMMARY_LABEL,
@@ -57,9 +76,10 @@ class AIExplainer:
                 "tool:venue_resolver",
                 "tool:volunteer_solver",
                 "tool:task_planner",
+                f"model:{model_name}",
             ],
             confidence_score=0.98,
-            model_name="gemini-1.5-pro",
+            model_name=model_name,
             prompt_version="v1.0",
         )
 
@@ -77,3 +97,4 @@ class AIExplainer:
                 f"Hard constraint violation: Target venue capacity {candidate_venue_capacity} < {session_registrants} registrants"
             )
         return True
+

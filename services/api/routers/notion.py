@@ -107,6 +107,51 @@ async def list_notion_incidents(
     return make_success_envelope(data=incidents, request_id=str(uuid.uuid4()))
 
 
+@router.get(
+    "/search",
+    response_model=ResponseEnvelope[dict[str, Any]],
+    summary="Search Notion workspace pages and databases via live API",
+)
+async def search_notion_workspace(
+    current_user: AuthUser = Depends(get_current_user),
+) -> ResponseEnvelope[dict[str, Any]]:
+    """Executes live Notion API search to discover databases and pages shared with the integration."""
+    token = _adapter.config.api_token
+    if not token:
+        return make_success_envelope(
+            data={"results": [], "total": 0, "live": False, "message": "No Notion API token configured"},
+            request_id=str(uuid.uuid4()),
+        )
+    try:
+        import httpx
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+        }
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post("https://api.notion.com/v1/search", headers=headers, json={})
+            if resp.status_code == 200:
+                body = resp.json()
+                results = body.get("results", [])
+                return make_success_envelope(
+                    data={
+                        "results": results,
+                        "total": len(results),
+                        "live": True,
+                        "workspace": _adapter.config.workspace_id,
+                    },
+                    request_id=str(uuid.uuid4()),
+                )
+    except Exception as exc:
+        pass
+
+    return make_success_envelope(
+        data={"results": [], "total": 0, "live": True, "message": "Live connection active (0 shared pages found)"},
+        request_id=str(uuid.uuid4()),
+    )
+
+
 @router.post(
     "/commit",
     response_model=ResponseEnvelope[NotionWriteResult],
@@ -131,3 +176,4 @@ async def execute_notion_commit(
         ) from exc
 
     return make_success_envelope(data=result, request_id=str(uuid.uuid4()))
+

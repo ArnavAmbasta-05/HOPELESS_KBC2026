@@ -89,6 +89,10 @@ class NotionHealthStatus(BaseModel):
     latency_ms: float
     token_valid: bool
     rate_limiter_tokens: float
+    workspace_name: str | None = None
+    bot_name: str | None = None
+    bot_id: str | None = None
+    live_connected: bool = False
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 

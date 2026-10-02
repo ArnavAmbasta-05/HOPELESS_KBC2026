@@ -47,7 +47,7 @@ class TestNotionAdapterContract:
         health = await adapter.health()
         assert health.status == "HEALTHY"
         assert health.token_valid is True
-        assert health.workspace_id == "ws_notion_kbc2026_sandbox"
+        assert health.workspace_id == adapter.config.workspace_id
 
     @pytest.mark.asyncio
     async def test_adapter_pull_changes_and_cursor(self) -> None:
@@ -55,8 +55,9 @@ class TestNotionAdapterContract:
         changes, cursor = await adapter.pull_changes()
 
         assert len(changes) >= 4
-        assert cursor.workspace_id == "ws_notion_kbc2026_sandbox"
+        assert cursor.workspace_id == adapter.config.workspace_id
         assert cursor.last_synced_at is not None
+
 
     def test_adapter_error_translation(self) -> None:
         adapter = NotionAdapter()

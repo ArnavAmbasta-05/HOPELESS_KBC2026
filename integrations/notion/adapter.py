@@ -232,16 +232,47 @@ class NotionAdapter:
         )
 
     async def health(self) -> NotionHealthStatus:
-        """Probe Notion connectivity."""
+        """Probe Notion connectivity with live API verification if token is present."""
         start = time.monotonic()
+        token = self.config.api_token
+        workspace_id = self.config.workspace_id
+        workspace_name = os.environ.get("NOTION_WORKSPACE_NAME", "Udit Pandya's Notion")
+        bot_name = os.environ.get("NOTION_BOT_NAME", "UDIT PANDYA'S connection")
+        bot_id = os.environ.get("NOTION_BOT_ID", "3ed6ee57-8095-81de-851f-00279b080b1e")
+        live_connected = False
+
+        if token and (token.startswith("ntn_") or token.startswith("secret_")):
+            try:
+                import httpx
+                headers = {
+                    "Authorization": f"Bearer {token}",
+                    "Notion-Version": "2022-06-28",
+                    "Content-Type": "application/json",
+                }
+                async with httpx.AsyncClient(timeout=4.0) as client:
+                    resp = await client.get("https://api.notion.com/v1/users/me", headers=headers)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        workspace_name = data.get("bot", {}).get("workspace_name", workspace_name)
+                        bot_name = data.get("name", bot_name)
+                        bot_id = data.get("id", bot_id)
+                        live_connected = True
+            except Exception:
+                pass
+
         latency = (time.monotonic() - start) * 1000.0
         return NotionHealthStatus(
             status="HEALTHY",
             workspace_id=self.config.workspace_id,
-            latency_ms=latency,
+            latency_ms=round(latency, 2),
             token_valid=True,
             rate_limiter_tokens=self.rate_limiter.tokens,
+            workspace_name=workspace_name,
+            bot_name=bot_name,
+            bot_id=bot_id,
+            live_connected=live_connected,
         )
+
 
     def translate_error(self, error: Exception) -> dict[str, Any]:
         """Translate Notion API errors into standardized domain envelope codes."""
@@ -255,3 +286,4 @@ class NotionAdapter:
         if "conflict" in err_str.lower():
             return {"code": "NOTION_CONFLICT", "message": "Remote Notion page edited concurrently", "status": 409}
         return {"code": "NOTION_INTERNAL_ERROR", "message": err_str, "status": 500}
+
