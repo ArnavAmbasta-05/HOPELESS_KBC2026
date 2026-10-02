@@ -1,0 +1,94 @@
+==============================================================================
+CHANGE @ 08:00  ops-lead (via Notion): Main Auditorium unavailable 08:00–23:59
+  reason: Ceiling AC leak reported by Estate Office
+==============================================================================
+
+[1] BLAST RADIUS  (deterministic, computed from typed edges)
+  ✗ Main Auditorium → Opening Ceremony
+      edge=hosts: session 10:00–10:45 falls inside unavailability window
+  ✗ Main Auditorium → Keynote: AI in FinTech
+      edge=hosts: session 11:00–12:00 falls inside unavailability window
+  ✗ Main Auditorium → Panel: Building Startups
+      edge=hosts: session 14:00–15:00 falls inside unavailability window
+  ✗ Main Auditorium → Prize Distribution
+      edge=hosts: session 17:00–18:00 falls inside unavailability window
+  ✗ Main Auditorium → AV setup in Main Auditorium
+      edge=task_at: task status 'in_progress' at a venue that is gone
+  ✗ Main Auditorium → Stage décor in Main Auditorium
+      edge=task_at: task status 'pending' at a venue that is gone
+  ✗ Main Auditorium → Instagram post 'Opening at Main Auditorium'
+      edge=mentions: public message names the old venue
+  ✗ Main Auditorium → Printed schedule boards (Gate 1, Gate 3)
+      edge=mentions: public message names the old venue
+  ✗ Main Auditorium → Opening Ceremony → 380 registrants of Opening Ceremony
+      edge=has_registrants: attendees must be told the new location
+  ✗ Main Auditorium → Keynote: AI in FinTech → 230 registrants of Keynote: AI in FinTech
+      edge=has_registrants: attendees must be told the new location
+  ✗ Main Auditorium → Panel: Building Startups → 180 registrants of Panel: Building Startups
+      edge=has_registrants: attendees must be told the new location
+  ✗ Main Auditorium → Prize Distribution → 390 registrants of Prize Distribution
+      edge=has_registrants: attendees must be told the new location
+  … 7 soft edges deferred to re-evaluation after resolution (Chief Guest (Vice Chancellor), Dr. Mehra (Keynote), Startup panel (3 founders), volunteer staffing)
+
+[2] VENUE RESOLUTION  (constraint check + scoring, rejections kept for explainability)
+  Opening Ceremony           10:00  Main Auditorium → Open Air Theatre  + Portable stage-light rig
+      rejected Seminar Hall: capacity 250 < 380 registered
+      rejected LH-3: capacity 150 < 380 registered
+      rejected LH-5: capacity 120 < 380 registered
+  Keynote: AI in FinTech     11:00  Main Auditorium → Seminar Hall
+      rejected LH-3: capacity 150 < 230 registered
+      rejected LH-5: capacity 120 < 230 registered
+  Panel: Building Startups   14:00  Main Auditorium → Open Air Theatre  + Portable projector + screen
+      rejected Seminar Hall: already booked in this slot
+      rejected LH-3: capacity 150 < 180 registered
+      rejected LH-5: capacity 120 < 180 registered
+  Prize Distribution         17:00  Main Auditorium → Open Air Theatre  + Portable stage-light rig
+      rejected Seminar Hall: capacity 250 < 390 registered
+      rejected LH-3: capacity 150 < 390 registered
+      rejected LH-5: capacity 120 < 390 registered
+
+    soft-edge re-evaluation: speakers
+  ✗ Chief Guest (Vice Chancellor): arrives at Bldg A, venue now Bldg C → escort needed
+  ✓ Dr. Mehra (Keynote): arrival building unchanged, no action
+  ✗ Startup panel (3 founders): arrives at Bldg B, venue now Bldg C → escort needed
+
+[3] VOLUNTEER RE-ALLOCATION  (OR-Tools CP-SAT, objective = minimise changes, then load)
+  − Dev     off  Keynote: AI in FinTech (AV)
+  + Kabir   on   Prize Distribution (crowd) @ Open Air Theatre
+  + Tanya   on   Opening Ceremony (crowd) @ Open Air Theatre
+  + Meera   on   Panel: Building Startups (crowd) @ Open Air Theatre
+  + Arjun   on   Keynote: AI in FinTech (AV) @ Seminar Hall  [STANDBY ACTIVATED]
+  15 of 16 existing assignments untouched
+
+[4] FOLLOW-UP TASK PLAN  (auto-generated, EDF per team, slack = deadline − finish)
+  id  team         window        deadline   slack  status   task
+  N01 tech         08:00–08:05   08:30        25m  ok       Cancel AV setup in Main Auditorium, release crew
+  N02 ops          08:00–08:15   08:30        15m  ok       Confirm Open Air Theatre booking with Estate Office
+  N17 vol_lead     08:00–08:15   09:30        75m  ok       Brief 4 reassigned volunteers
+  N03 ops          08:15–08:30   09:30        60m  ok       Confirm Seminar Hall booking with Estate Office
+  N04 tech         08:15–08:55   09:45        50m  ok       Move Portable stage-light rig: Store → Open Air Theatre
+  N07 stage        08:15–09:15   09:45        30m  ok       Transfer stage décor Main Auditorium → Open Air Theatre
+  N11 registration 08:15–08:25   09:00        35m  ok       Notify 380 registrants of Opening Ceremony
+  N09 marketing    08:30–09:00   09:30        30m  ok       Update schedule boards & venue signage
+  N12 registration 08:30–08:40   10:00        80m  ok       Notify 230 registrants of Keynote: AI in FinTech
+  N15 ops          08:30–08:40   09:30        50m  ok       Arrange escort for Chief Guest (Vice Chancellor)
+  N13 registration 08:40–08:50   13:00       250m  ok       Notify 180 registrants of Panel: Building Startups
+  N16 ops          08:40–08:50   13:30       280m  ok       Arrange escort for Startup panel (3 founders)
+  N14 registration 08:50–09:00   16:00       420m  ok       Notify 390 registrants of Prize Distribution
+  N05 tech         08:55–09:15   09:45        30m  ok       Sound & light check at Open Air Theatre
+  N10 marketing    09:00–09:10   09:30        20m  ok       Re-issue Instagram post with new venue
+  N06 tech         09:15–09:45   13:45       240m  ok       Move Portable projector + screen: Store → Open Air Theatre
+  N08 stage        09:15–09:45   09:45         0m  AT RISK  Opening act rehearsal at Open Air Theatre
+
+[5] ESCALATIONS
+  ⚠ N08 'Opening act rehearsal at Open Air Theatre' slack 0m → notify stage lead
+
+[6] NOTION WRITE PLAN  (queued, rate-limited ~3 req/s)
+  4 session venue-relation updates, 5 assignment edits, 17 task pages, flags on stale comms/tasks, 1 Impact Report, 1 Change Proposal
+  ≈ 32 API calls ≈ 11s to apply once approved
+  state: BRANCH ONLY. Change Proposal page awaits Status = Approved in Notion before merge.
+
+[7] AI SUMMARY  ⟨AI-GENERATED, unverified narrative; facts above are the source of truth⟩
+  (in production an LLM writes this from sections 1–5; templated here)
+  Main Auditorium is out for the day. 4 sessions were re-homed: the Opening Ceremony, Panel and Prize Distribution move outdoors to the Open Air Theatre (only venue large enough), the Keynote moves to the Seminar Hall. 4 volunteer shifts changed; 1 task(s) need attention before doors open at 09:45.
+==============================================================================
