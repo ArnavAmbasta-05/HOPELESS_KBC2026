@@ -59,7 +59,7 @@ export const SimulationStudioView: React.FC<SimulationStudioProps> = ({
   const isRejected = proposal?.status === "rejected";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Action Banner / Notification */}
       {actionMessage && (
         <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-xs font-semibold text-emerald-300 flex items-center space-x-2.5 shadow-xl">
@@ -69,7 +69,7 @@ export const SimulationStudioView: React.FC<SimulationStudioProps> = ({
       )}
 
       {/* Top Header & Simulation Trigger */}
-      <div className="glass-panel p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="glass-panel aurora-ring p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center space-x-1">

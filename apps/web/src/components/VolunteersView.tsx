@@ -1,16 +1,6 @@
 import React, { useState } from "react";
-import {
-  Users2,
-  Shield,
-  Zap,
-  Phone,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  Radio,
-  UserCheck,
-  UserPlus,
-} from "lucide-react";
+import { Zap, Search, CheckCircle2 } from "lucide-react";
+import { Reveal, RevealGroup, Item, SectionHeader } from "./ui";
 
 export interface VolunteerMember {
   id: string;
@@ -137,37 +127,36 @@ export const VolunteersView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Action Notification */}
       {notif && (
-        <div className="p-3.5 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 text-xs font-semibold text-cyan-300 flex items-center space-x-2">
-          <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+        <div className="p-3.5 rounded-2xl bg-cyan-950/60 border border-cyan-500/40 text-xs font-semibold text-cyan-200 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-cyan-300" />
           <span>{notif}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
-            Volunteers & Staffing Command Roster
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time skill matching (CP-SAT), nearest-standby dispatch, and shift rebalancing during disruptions.
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
-            <span className="text-slate-400">Total Active Crew:</span>{" "}
-            <span className="font-bold text-cyan-400">16 Volunteers</span>
-          </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
-            <span className="text-slate-400">Standby Available:</span>{" "}
-            <span className="font-bold text-emerald-400">2 Ready</span>
-          </div>
-        </div>
-      </div>
+      <Reveal>
+        <SectionHeader
+          kicker="Crew command"
+          title={<>Volunteers &amp; <span className="text-aurora">staffing roster</span></>}
+          subtitle="Real-time skill matching (CP-SAT), nearest-standby dispatch and shift rebalancing during disruptions."
+          icon={<Zap className="w-3.5 h-3.5" />}
+          right={
+            <div className="flex items-center gap-3">
+              <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
+                <span className="text-slate-400">Active crew:</span>{" "}
+                <span className="font-bold text-cyan-300">16</span>
+              </div>
+              <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
+                <span className="text-slate-400">Standby:</span>{" "}
+                <span className="font-bold text-emerald-300">2 ready</span>
+              </div>
+            </div>
+          }
+        />
+      </Reveal>
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -200,11 +189,11 @@ export const VolunteersView: React.FC = () => {
       </div>
 
       {/* Roster Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <RevealGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((v) => (
-          <div
+          <Item
             key={v.id}
-            className="p-5 rounded-2xl bg-slate-900/80 border border-white/10 hover:border-cyan-500/30 transition-all space-y-3.5"
+            className="rail-card glass-panel glass-panel-hover p-5 rounded-2xl space-y-3.5"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -254,9 +243,9 @@ export const VolunteersView: React.FC = () => {
                 </button>
               )}
             </div>
-          </div>
+          </Item>
         ))}
-      </div>
+      </RevealGroup>
     </div>
   );
 };

@@ -2,16 +2,13 @@ import React, { useState } from "react";
 import {
   CalendarDays,
   Clock,
-  MapPin,
   Users,
   Mic,
-  Award,
   Bus,
-  Tag,
   Search,
-  CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+import { Reveal, SectionHeader } from "./ui";
 
 export interface ScheduledEvent {
   id: string;
@@ -152,29 +149,28 @@ export const ScheduleView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
-            Event Schedule & Master Timeline
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Date & time-wise schedule, guest speaker arrival coordination, and student hostel transport mapping.
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-3">
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
-            <span className="text-slate-400">Total Registered Audience:</span>{" "}
-            <span className="font-bold text-cyan-400">1,180 Attendees</span>
-          </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
-            <span className="text-slate-400">Festival Date:</span>{" "}
-            <span className="font-bold text-white">15 Oct 2026</span>
-          </div>
-        </div>
-      </div>
+      <Reveal>
+        <SectionHeader
+          kicker="Run of show"
+          title={<>Event schedule &amp; <span className="text-aurora">master timeline</span></>}
+          subtitle="Time-wise sessions, guest-speaker arrival coordination and student hostel transport mapping."
+          icon={<CalendarDays className="w-3.5 h-3.5" />}
+          right={
+            <div className="flex items-center gap-3">
+              <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
+                <span className="text-slate-400">Audience:</span>{" "}
+                <span className="font-bold text-cyan-300">1,180</span>
+              </div>
+              <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
+                <span className="text-slate-400">Date:</span>{" "}
+                <span className="font-bold text-white">15 Oct 2026</span>
+              </div>
+            </div>
+          }
+        />
+      </Reveal>
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -207,7 +203,7 @@ export const ScheduleView: React.FC = () => {
       </div>
 
       {/* Main Split View */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <Reveal className="grid grid-cols-1 lg:grid-cols-12 gap-6" as="div">
         {/* Timeline Events List (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {filteredEvents.map((ev) => {
@@ -216,10 +212,10 @@ export const ScheduleView: React.FC = () => {
               <div
                 key={ev.id}
                 onClick={() => setSelectedEvent(ev)}
-                className={`p-5 rounded-2xl cursor-pointer transition-all border ${
+                className={`rail-card p-5 rounded-2xl cursor-pointer transition-all border ${
                   isSelected
-                    ? "bg-slate-900/95 border-cyan-500/50 shadow-xl shadow-cyan-500/10"
-                    : "bg-slate-900/60 border-white/5 hover:border-white/20 hover:bg-slate-900/80"
+                    ? "glass-panel border-cyan-500/50 shadow-glow-cyan"
+                    : "glass-soft border-white/5 hover:border-white/20 hover:-translate-y-0.5"
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -367,7 +363,7 @@ export const ScheduleView: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 };

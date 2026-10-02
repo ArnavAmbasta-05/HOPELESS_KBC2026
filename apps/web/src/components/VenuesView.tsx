@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Building2,
   Users,
@@ -7,11 +7,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   CloudRain,
-  ShieldAlert,
   Search,
-  SlidersHorizontal,
   Zap,
 } from "lucide-react";
+import { Reveal, SectionHeader, Pill } from "./ui";
 
 export interface VenueDetail {
   id: string;
@@ -158,11 +157,37 @@ export const KIIT_VENUES: VenueDetail[] = [
 ];
 
 export const VenuesView: React.FC = () => {
+  const [venues, setVenues] = useState<VenueDetail[]>(KIIT_VENUES);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedVenue, setSelectedVenue] = useState<VenueDetail | null>(KIIT_VENUES[0]);
 
-  const filteredVenues = KIIT_VENUES.filter((venue) => {
+  useEffect(() => {
+    // Fetch live meteorological telemetry for Patia, Bhubaneswar
+    fetch("/weather/live-bhubaneswar")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.temperature_celsius) {
+          setVenues((prev) =>
+            prev.map((v) =>
+              v.id === "ven_open_air"
+                ? {
+                    ...v,
+                    weatherSensors: {
+                      temp: `${data.temperature_celsius}°C`,
+                      rainRisk: `${data.precipitation_mm_per_hr > 0 ? "High Rain (" + data.precipitation_mm_per_hr + "mm)" : "0% (Clear)"}`,
+                      windSpeed: `${data.wind_speed_kmh} km/h`,
+                    },
+                  }
+                : v
+            )
+          );
+        }
+      })
+      .catch((err) => console.warn("Live weather background fetch:", err));
+  }, []);
+
+  const filteredVenues = venues.filter((venue) => {
     const matchesSearch =
       venue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       venue.campus.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -172,30 +197,28 @@ export const VenuesView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
-            Institutional Venues & Auditoriums
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time digital twin of all KIIT University auditoriums, OATs, AV inventory & staff allocations.
-          </p>
-        </div>
-
-        {/* Stats Pills */}
-        <div className="flex items-center space-x-3">
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
-            <span className="text-slate-400">Total Seating Capacity:</span>{" "}
-            <span className="font-bold text-cyan-400">3,600 Seats</span>
-          </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs">
-            <span className="text-slate-400">Monitored Facilities:</span>{" "}
-            <span className="font-bold text-white">6 Venues</span>
-          </div>
-        </div>
-      </div>
+      <Reveal>
+        <SectionHeader
+          kicker="Digital twin"
+          title={<>Institutional venues &amp; <span className="text-aurora">auditoriums</span></>}
+          subtitle="Real-time digital twin of every KIIT auditorium, OAT, AV inventory and staffing allocation."
+          icon={<Building2 className="w-3.5 h-3.5" />}
+          right={
+            <div className="flex items-center gap-3">
+              <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
+                <span className="text-slate-400">Total seating:</span>{" "}
+                <span className="font-bold text-cyan-300">3,600</span>
+              </div>
+              <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
+                <span className="text-slate-400">Facilities:</span>{" "}
+                <span className="font-bold text-white">6</span>
+              </div>
+            </div>
+          }
+        />
+      </Reveal>
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -228,7 +251,7 @@ export const VenuesView: React.FC = () => {
       </div>
 
       {/* Venues Grid & Detail Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <Reveal className="grid grid-cols-1 lg:grid-cols-12 gap-6" as="div">
         {/* Venues Cards (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {filteredVenues.map((venue) => {
@@ -239,10 +262,10 @@ export const VenuesView: React.FC = () => {
               <div
                 key={venue.id}
                 onClick={() => setSelectedVenue(venue)}
-                className={`p-5 rounded-2xl cursor-pointer transition-all border ${
+                className={`rail-card p-5 rounded-2xl cursor-pointer transition-all border ${
                   isSelected
-                    ? "bg-slate-900/95 border-cyan-500/50 shadow-xl shadow-cyan-500/10"
-                    : "bg-slate-900/60 border-white/5 hover:border-white/20 hover:bg-slate-900/80"
+                    ? "glass-panel border-cyan-500/50 shadow-glow-cyan"
+                    : "glass-soft border-white/5 hover:border-white/20 hover:-translate-y-0.5"
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -405,7 +428,7 @@ export const VenuesView: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 };
