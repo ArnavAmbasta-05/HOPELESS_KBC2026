@@ -1,0 +1,53 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.whl
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# ---- Node / Frontend ----
+node_modules/
+apps/web/dist/
+.turbo/
+.next/
+*.tsbuildinfo
+
+# ---- Docker ----
+*.pid
+
+# ---- IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- Environment / Secrets ----
+.env
+.env.local
+.env.*.local
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ---- Misc ----
+*.log
+*.bak
+tmp/
+scratch/
