@@ -1,0 +1,13 @@
+# Grafana dashboard provider — load JSON dashboards from the provisioned folder
+apiVersion: 1
+
+providers:
+  - name: "KoreX"
+    orgId: 1
+    folder: ""
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false
