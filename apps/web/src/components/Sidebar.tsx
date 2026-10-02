@@ -86,11 +86,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="w-64 bg-[#080d1a] border-r border-white/10 flex flex-col shrink-0 select-none">
       {/* Brand Header */}
-      <div className="p-5 border-b border-white/10 flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-cyan-500/20">
-          K
-        </div>
-        <div>
+      <div className="p-4 border-b border-white/10 flex items-center space-x-3">
+        <img
+          src="/logo.png"
+          alt="KoreX Logo"
+          className="w-10 h-10 object-contain rounded-xl shadow-lg shadow-cyan-500/20 shrink-0 border border-white/10 bg-slate-950 p-1"
+        />
+        <div className="min-w-0">
           <div className="flex items-center space-x-2">
             <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-cyan-300 via-indigo-200 to-purple-300 bg-clip-text text-transparent">
               KoreX

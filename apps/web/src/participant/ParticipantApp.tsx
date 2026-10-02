@@ -75,11 +75,14 @@ export const ParticipantApp: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', padding: '16px', color: '#f8fafc', fontFamily: 'sans-serif' }}>
-      <header style={{ marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
-        <h1 style={{ margin: 0, fontSize: '1.4rem', color: '#38bdf8' }}>KoreX Participant Pass</h1>
-        <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-          Live Event Companion · KIIT KBC 2026
-        </p>
+      <header style={{ marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <img src="/logo.png" alt="KoreX Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: '#020617', padding: '2px' }} />
+        <div>
+          <h1 style={{ margin: 0, fontSize: '1.3rem', color: '#38bdf8' }}>KoreX Participant Pass</h1>
+          <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+            Live Event Companion · KIIT KBC 2026
+          </p>
+        </div>
       </header>
 
       {/* Navigation tabs */}
