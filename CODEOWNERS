@@ -1,0 +1,46 @@
+# KoreX CODEOWNERS
+# Each line maps a path pattern to the agent(s) responsible for review.
+# Agent slugs correspond to agents/NN-slug.md jurisdiction contracts.
+
+# Repo root config and infra
+pyproject.toml                     @agent-01-platform-devops
+.pre-commit-config.yaml            @agent-01-platform-devops
+.gitignore                         @agent-01-platform-devops
+.env.example                       @agent-01-platform-devops
+Makefile                           @agent-01-platform-devops
+infra/                             @agent-01-platform-devops
+.github/                           @agent-01-platform-devops
+
+# Backend API
+services/api/                      @agent-02-backend-domain
+
+# Background workers
+services/workers/                  @agent-02-backend-domain
+
+# Domain models and migrations
+packages/domain/                   @agent-03-data-graph
+
+# Shared contracts/schemas
+packages/contracts/                @agent-02-backend-domain
+
+# AI orchestration
+ai/graphs/                         @agent-06-ai-orchestration
+
+# Integrations
+integrations/                      @agent-08-notion-integration
+
+# Frontend command center
+apps/web/                          @agent-14-frontend-command-center
+
+# Tests
+tests/                             @agent-17-qa-workflow
+
+# Documentation
+docs/                              @agent-00-orchestrator
+
+# Agent contracts
+agents/                            @agent-00-orchestrator
+
+# Security-sensitive files (require security review)
+**/auth/                           @agent-16-security-privacy
+**/security/                       @agent-16-security-privacy
