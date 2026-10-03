@@ -44,10 +44,10 @@ export const ScheduleView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Sessions (with the solver's relocation applied) are served live by the
-  // backend scenario service: GET /api/v1/scenario/sessions.
-  useEffect(() => {
+  const fetchSchedule = () => {
+    setIsRefreshing(true);
     fetch("/api/v1/scenario/sessions")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -55,13 +55,23 @@ export const ScheduleView: React.FC = () => {
       })
       .then((data: ScheduledEvent[]) => {
         setEvents(data);
-        setSelectedEvent(data[0] ?? null);
+        if (!selectedEvent && data.length > 0) {
+          setSelectedEvent(data[0]);
+        }
         setLoadError(null);
       })
       .catch((err) => {
         console.error("Failed to load schedule:", err);
         setLoadError("Unable to load the schedule from the operations API.");
-      });
+      })
+      .finally(() => setIsRefreshing(false));
+  };
+
+  // Initial load + periodic 5-second polling from live Notion backend
+  useEffect(() => {
+    fetchSchedule();
+    const interval = setInterval(fetchSchedule, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredEvents = events.filter((ev) => {
@@ -84,6 +94,15 @@ export const ScheduleView: React.FC = () => {
           icon={<CalendarDays className="w-3.5 h-3.5" />}
           right={
             <div className="flex items-center gap-3">
+              <button
+                onClick={fetchSchedule}
+                disabled={isRefreshing}
+                className="px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-500/30 text-xs font-bold text-cyan-300 flex items-center space-x-1.5 transition-all shadow-sm"
+                title="Fetch latest updates from Notion"
+              >
+                <span className={`w-2 h-2 rounded-full ${isRefreshing ? "bg-cyan-400 animate-ping" : "bg-emerald-400 animate-pulse"}`} />
+                <span>{isRefreshing ? "Syncing..." : "Live Notion Ingest"}</span>
+              </button>
               <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
                 <span className="text-slate-400">Audience:</span>{" "}
                 <span className="font-bold text-cyan-300">
@@ -166,11 +185,17 @@ export const ScheduleView: React.FC = () => {
                     <h3 className="text-base font-bold text-white">{ev.title}</h3>
                   </div>
 
-                  {ev.isRelocated && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
-                      RELOCATED
-                    </span>
-                  )}
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border shrink-0 ${
+                      ev.status.toUpperCase() === "CANCELLED"
+                        ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                        : ev.status.toUpperCase() === "RELOCATED"
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    }`}
+                  >
+                    {ev.status}
+                  </span>
                 </div>
 
                 {/* Speaker & Venue Footprint */}

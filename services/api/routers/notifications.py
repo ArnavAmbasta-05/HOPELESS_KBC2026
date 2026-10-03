@@ -141,3 +141,22 @@ async def get_delivery_metrics(
     """Returns total, delivered, failed metrics and delivery rates."""
     metrics = _notification_service.dispatcher.get_delivery_metrics()
     return make_success_envelope(data=metrics, request_id=str(uuid.uuid4()))
+
+
+from integrations.email.emailjs_client import EmailJSClient, EmailNotificationPayload, EmailDispatchResult
+
+_email_client = EmailJSClient()
+
+@router.post(
+    "/email-broadcast",
+    response_model=ResponseEnvelope[EmailDispatchResult],
+    summary="Send transactional email and multi-channel broadcast to participants, staff, and transport",
+)
+async def send_email_broadcast(
+    payload: EmailNotificationPayload,
+    current_user: AuthUser = Depends(get_current_user),
+) -> ResponseEnvelope[EmailDispatchResult]:
+    """Dispatches targeted emails and mobile broadcasts to affected event cohorts."""
+    result = await _email_client.send_event_change_email(payload)
+    return make_success_envelope(data=result, request_id=str(uuid.uuid4()))
+

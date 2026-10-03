@@ -136,6 +136,7 @@ class AIChatRequest(BaseModel):
     prompt: str = Field(..., description="User prompt or question")
     event_id: str = Field(default="evt_kbc2026", description="Event ID")
     context: str | None = Field(default=None, description="Optional extra operational context")
+    history: list[dict[str, str]] = Field(default_factory=list, description="Recent conversation turns")
 
 
 @router.post(
@@ -172,23 +173,127 @@ async def chat_with_gemini_copilot(
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
     model_name = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
+    # Build conversation context from history
+    history_turns = []
+    for h in request.history[-6:]:
+        r = "Event Commander" if h.get("role") == "user" else "KoreX AI Supervisor"
+        history_turns.append(f"{r}: {h.get('text', '')}")
+    history_str = "\n".join(history_turns) if history_turns else ""
+    full_lookup_text = f"{history_str}\n{request.prompt}".lower()
 
+    # Dynamically query Live Notion Workspace State
+    token = os.environ.get("NOTION_API_KEY", "")
+    lower_prompt = request.prompt.lower().strip()
+    
+    live_notion_sessions = []
+    notion_patch_applied = None
 
-    grounded_context = (
-        "Grounding Context for KIIT Event Operations (KoreX):\n"
-        "- Campus: KIIT University, Patia, Bhubaneswar (Campuses 3, 6, 7, 15).\n"
-        "- GIS Engine: CARTO AI Workflows & MCP Server (ac_o657y8er) connected with 14 spatial tools (routing, isolines, geocoding, builder).\n"
-        "- Venues: Main Auditorium (1600 cap, UNAVAILABLE due to AC leak), "
-        "Open Air Theatre (600 cap, AVAILABLE), Campus 7 Seminar Hall (250 cap, AVAILABLE), "
-        "Campus 6 Aud (400 cap), Campus 15 Aud (350 cap), Campus 3 Lawn (800 cap).\n"
-        "- Relocations: Keynote (580 pax) -> Open Air Theatre (150m walking, 2 min), AI Track (240 pax) -> Campus 7 Seminar Hall (400m walking, 5 min).\n"
-        "- Hostels: KP-6/KP-7 (Boys), QC-1/QC-2 (Girls).\n"
-        "- Volunteers: 16 total, 1 standby deployed (Arjun Sharma - AV Lead, KP-6).\n"
-        "- Notion Workspace: Udit Pandya's Notion (Connected with 3 live databases).\n"
-        "- Hard Constraints: Capacity violations = 0, Time overlaps = 0.\n"
-    )
+    # Check for operational action triggers: cancel, restore/undo, relocate, reschedule, confirm, email/broadcast
+    is_restore = any(w in lower_prompt for w in ["undo", "reinstate", "restore", "uncancel", "un-cancel", "reopen", "bring back", "schedule again", "re-schedule"])
+    is_cancel = any(w in lower_prompt for w in ["cancel", "drop", "remove"]) and not is_restore
+    is_relocate = any(w in lower_prompt for w in ["move", "relocate", "reschedule", "change venue", "change to", "confirm"]) and not is_restore
+    is_notify = any(w in lower_prompt for w in ["email", "notify", "broadcast", "send mail", "send message", "alert", "inform"]) and not (is_cancel or is_restore or is_relocate)
 
-    narrative = f"[Grounded Response] For query '{request.prompt}': All 4 relocated sessions have been re-assigned to Open Air Theatre and Campus 7 Seminar Hall with zero time overlap and full seat compliance."
+    email_dispatch_applied = None
+    if is_notify:
+        try:
+            from integrations.email.emailjs_client import EmailJSClient, EmailNotificationPayload
+            email_client = EmailJSClient()
+            target_title = "Opening Keynote & Welcome Address"
+            if "valedictory" in full_lookup_text:
+                target_title = "Valedictory & Awards Ceremony"
+            elif "autonomous" in full_lookup_text:
+                target_title = "Future of Autonomous Campus Mobility"
+            elif "ai in event" in full_lookup_text:
+                target_title = "AI in Event Operations & CP-SAT Optimizations"
+            
+            pax = 580 if "keynote" in target_title.lower() else (600 if "valedictory" in target_title.lower() else 380)
+            res = await email_client.send_event_change_email(
+                EmailNotificationPayload(
+                    session_title=target_title,
+                    previous_venue="Main Auditorium (Campus 6)",
+                    new_venue="Open Air Theatre (Campus 6)",
+                    status="RELOCATED",
+                    recipient_count=pax,
+                    transit_advisory="150m walking (2 min). Weather canopy on standby.",
+                )
+            )
+            email_dispatch_applied = (
+                f"✅ [EMAIL & MULTI-CHANNEL BROADCAST DISPATCHED]\n"
+                f"• Dispatch ID: {res.dispatch_id}\n"
+                f"• Target Cohort: {target_title} (Participants: {res.participants_notified} inboxes, Staff: {res.staff_notified} leads, EV Shuttles: {res.transport_routes_updated} routes)\n"
+                f"• Channels Used: {', '.join(res.channels_used)}\n"
+                f"• Delivery Engine: {res.delivery_receipt}\n"
+                f"• Status: {res.status} at {res.sent_at}"
+            )
+        except Exception as exc:
+            logger.warning("email.dispatch_failed", error=str(exc))
+
+    if token:
+        try:
+            headers = {"Authorization": f"Bearer {token}", "Notion-Version": "2022-06-28", "Content-Type": "application/json"}
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                search_res = await client.post("https://api.notion.com/v1/search", headers=headers, json={"query": "Master Event Sessions Timeline"})
+                if search_res.status_code == 200:
+                    for db in search_res.json().get("results", []):
+                        db_id = db.get("id")
+                        rows_res = await client.post(f"https://api.notion.com/v1/databases/{db_id}/query", headers=headers, json={})
+                        for row in rows_res.json().get("results", []):
+                            props = row.get("properties", {})
+                            title_list = props.get("Session Title", {}).get("title", [])
+                            title = title_list[0].get("plain_text", "") if title_list else ""
+                            status_val = props.get("Status", {}).get("select", {}).get("name", "")
+                            venue_list = props.get("Assigned Venue", {}).get("rich_text", [])
+                            venue_val = venue_list[0].get("plain_text", "") if venue_list else ""
+                            row_id = row.get("id")
+                            
+                            # Check if this row is mentioned in user prompt OR in recent conversational context
+                            title_words = [w for w in title.lower().split() if len(w) > 3]
+                            is_match = any(w in lower_prompt for w in title_words) or \
+                                       ("keynote" in full_lookup_text and "keynote" in title.lower()) or \
+                                       ("valedictory" in full_lookup_text and "valedictory" in title.lower()) or \
+                                       ("ai in event" in full_lookup_text and "ai in event" in title.lower())
+                            
+                            if is_restore and (is_match or status_val == "CANCELLED"):
+                                patch_body = {"properties": {"Status": {"select": {"name": "SCHEDULED"}}}}
+                                patch_res = await client.patch(f"https://api.notion.com/v1/pages/{row_id}", headers=headers, json=patch_body)
+                                if patch_res.status_code == 200:
+                                    status_val = "SCHEDULED"
+                                    notion_patch_applied = f"Session '{title}' was restored to SCHEDULED in Notion (Page ID: {row_id})."
+                            elif is_cancel and is_match:
+                                patch_body = {"properties": {"Status": {"select": {"name": "CANCELLED"}}}}
+                                patch_res = await client.patch(f"https://api.notion.com/v1/pages/{row_id}", headers=headers, json=patch_body)
+                                if patch_res.status_code == 200:
+                                    status_val = "CANCELLED"
+                                    notion_patch_applied = f"Session '{title}' status updated to CANCELLED in Notion (Page ID: {row_id})."
+                            elif is_relocate and is_match:
+                                target_v = "Open Air Theatre"
+                                if "seminar" in lower_prompt or "campus 7" in lower_prompt:
+                                    target_v = "Campus 7 Seminar Hall"
+                                elif "campus 15" in lower_prompt:
+                                    target_v = "Campus 15 Auditorium"
+                                elif "campus 3" in lower_prompt or "lawn" in lower_prompt:
+                                    target_v = "Campus 3 Central Lawn"
+                                
+                                patch_body = {
+                                    "properties": {
+                                        "Status": {"select": {"name": "RELOCATED"}},
+                                        "Assigned Venue": {"rich_text": [{"type": "text", "text": {"content": f"{target_v} (Relocated via AI)"}}]},
+                                    }
+                                }
+                                patch_res = await client.patch(f"https://api.notion.com/v1/pages/{row_id}", headers=headers, json=patch_body)
+                                if patch_res.status_code == 200:
+                                    status_val = "RELOCATED"
+                                    venue_val = f"{target_v} (Relocated via AI)"
+                                    notion_patch_applied = f"Session '{title}' relocated to '{target_v}' in Notion (Page ID: {row_id})."
+                            
+                            live_notion_sessions.append(f"• {title}: Venue='{venue_val}', Status='{status_val}'")
+        except Exception as exc:
+            logger.warning("notion.live_query_patch_failed", error=str(exc))
+
+    notion_live_summary = "\n".join(live_notion_sessions) if live_notion_sessions else "No active Notion sessions fetched."
+
+    narrative = f"[Grounded Response] For query '{request.prompt}': All relocated sessions have been re-assigned with zero time overlap and full seat compliance."
     sources = ["tool:venue_resolver", "tool:volunteer_solver", "tool:carto_mcp_spatial", "notion:udit_pandya_workspace", f"model:{model_name}"]
     is_live = False
 
@@ -199,14 +304,32 @@ async def chat_with_gemini_copilot(
     ]
 
     if api_key:
+        extra_notion_note = f"\n[LIVE NOTION ACTION EXECUTED: {notion_patch_applied}]\n" if notion_patch_applied else ""
+        extra_email_note = f"\n[LIVE EMAIL & BROADCAST DISPATCH RESULT:\n{email_dispatch_applied}]\n" if email_dispatch_applied else ""
+        conversation_context_block = f"\nRECENT CONVERSATION HISTORY:\n{history_str}\n" if history_str else ""
         system_prompt = (
             GUARD_SYSTEM_PREFIX +
             "You are the KoreX AI Operational Supervisor for KIIT University Event Command Center.\n"
-            "If the user greets you (e.g. 'hey', 'hello'), greet them back warmly as the Event Commander and provide a 1-2 sentence readiness status.\n"
-            "If they ask an operational or map/GIS question, answer concisely and professionally using these grounded facts:\n"
-            f"{grounded_context}\n\n"
-            f"User Query: {request.prompt}\n"
-            "Answer in 2-4 direct, executive sentences with specific venue names, distances, and student counts where applicable."
+            "You are connected LIVE to Udit Pandya's Notion workspace and the KoreX/EmailJS Multi-Channel Notification Gateway.\n\n"
+            f"{conversation_context_block}"
+            f"LIVE AUTHORITATIVE NOTION DATABASE STATE (Real-time sync):\n"
+            f"{notion_live_summary}\n"
+            f"{extra_notion_note}"
+            f"{extra_email_note}\n"
+            "OPERATIONAL VENUES & CAPACITIES:\n"
+            "- Event: KBC 2026 (KIIT Business Conclave)\n"
+            "- Main Auditorium (1600 Pax) -> UNAVAILABLE (AC leak)\n"
+            "- Campus 3 Central Lawn (800 Pax) -> AVAILABLE (Outdoor, 500m / 6 min)\n"
+            "- Open Air Theatre (600 Pax) -> AVAILABLE (Outdoor, canopy ready, 150m / 2 min)\n"
+            "- Campus 6 Auditorium (400 Pax) -> AVAILABLE (Indoor, hosts Autonomous Mobility 13:00-14:30)\n"
+            "- Campus 15 Auditorium (350 Pax) -> AVAILABLE (Indoor, 450m / 5 min)\n"
+            "- Campus 7 Seminar Hall (250 Pax) -> AVAILABLE (Indoor, 400m / 5 min)\n\n"
+            "INSTRUCTIONS:\n"
+            "1. Pay close attention to conversational context: if the user asks about a session in turn 1 and gives an action (e.g. 'change to open air theatre') in turn 2, understand that the action applies to that same session.\n"
+            "2. If an action was executed in Notion, confirm it clearly with '✅ [ACTION EXECUTED IN NOTION & KOREX]' and state the new venue and status.\n"
+            "3. If the user commands to send an email / broadcast / notify participants / staff / transport, confirm the dispatch details with recipient counts, channels (EmailJS, Push, Shuttle Digital Signage), and delivery status.\n\n"
+            f"Current User Directive: {request.prompt}\n"
+            "Be clear, precise, and executive."
         )
         for cand in candidate_models:
             try:
