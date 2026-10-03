@@ -14,9 +14,7 @@ export interface VolunteerMember {
   hoursWorked: number;
 }
 
-// Volunteer roster is served live by the backend scenario service
-// (GET /api/v1/scenario/volunteers) — the same seed the volunteer
-// CP-SAT solver uses. No hardcoded roster here.
+import { getApiUrl } from "../lib/api";
 
 export const VolunteersView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +26,7 @@ export const VolunteersView: React.FC = () => {
   // Roster is served live by the backend scenario service (same seed the
   // volunteer CP-SAT solver uses): GET /api/v1/scenario/volunteers.
   useEffect(() => {
-    fetch("/api/v1/scenario/volunteers")
+    fetch(getApiUrl("/api/v1/scenario/volunteers"))
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { getApiUrl } from "../lib/api";
 import QRCode from "qrcode";
 import {
   QrCode,
@@ -113,7 +114,7 @@ export const ParticipantPortalView: React.FC = () => {
   const fetchRecords = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch("/api/v1/attendance/records", {
+      const resp = await fetch(getApiUrl("/api/v1/attendance/records"), {
         headers: { Authorization: "Bearer dev-token" },
       });
       if (resp.ok) {
@@ -141,7 +142,7 @@ export const ParticipantPortalView: React.FC = () => {
     const targetSession = SESSIONS.find((s) => s.id === formSessionId) || SESSIONS[0];
 
     try {
-      const resp = await fetch("/api/v1/attendance/check-in", {
+      const resp = await fetch(getApiUrl("/api/v1/attendance/check-in"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -199,7 +200,7 @@ export const ParticipantPortalView: React.FC = () => {
   const handleExportExcel = () => {
     // 1. First trigger the backend streaming response
     try {
-      window.location.href = "/api/v1/attendance/export-excel";
+      window.location.href = getApiUrl("/api/v1/attendance/export-excel");
     } catch {
       // 2. Client-side RFC 4180 CSV export with UTF-8 BOM fallback
       let csvContent = "\ufeff";

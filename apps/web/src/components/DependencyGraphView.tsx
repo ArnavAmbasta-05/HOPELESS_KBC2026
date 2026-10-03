@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { getApiUrl } from "../lib/api";
 import {
   Info,
   AlertTriangle,
@@ -62,7 +63,7 @@ export const DependencyGraphView: React.FC = () => {
 
   // Fetch dependency graph from backend API
   useEffect(() => {
-    fetch("/api/v1/scenario/dependencies")
+    fetch(getApiUrl("/api/v1/scenario/dependencies"))
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

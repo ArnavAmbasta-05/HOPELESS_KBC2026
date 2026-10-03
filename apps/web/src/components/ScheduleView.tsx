@@ -35,8 +35,7 @@ export interface ScheduledEvent {
   status: "Scheduled" | "Relocated" | "In Progress" | "Completed";
 }
 
-// Schedule data (with the solver's relocation applied) is served live by
-// the backend scenario service: GET /api/v1/scenario/sessions.
+import { getApiUrl } from "../lib/api";
 
 export const ScheduleView: React.FC = () => {
   const [events, setEvents] = useState<ScheduledEvent[]>([]);
@@ -48,7 +47,7 @@ export const ScheduleView: React.FC = () => {
 
   const fetchSchedule = () => {
     setIsRefreshing(true);
-    fetch("/api/v1/scenario/sessions")
+    fetch(getApiUrl("/api/v1/scenario/sessions"))
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

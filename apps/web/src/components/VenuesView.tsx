@@ -38,9 +38,7 @@ export interface VenueDetail {
   };
 }
 
-// Venue data is served live by the backend scenario service
-// (GET /api/v1/scenario/venues) — the SAME golden-seed source the CP-SAT
-// solver, AI copilot and dependency engine use. No hardcoded roster here.
+import { getApiUrl } from "../lib/api";
 
 export const VenuesView: React.FC = () => {
   const [venues, setVenues] = useState<VenueDetail[]>([]);
@@ -51,7 +49,7 @@ export const VenuesView: React.FC = () => {
 
   // Load venues from the backend scenario service (same source the solver uses).
   useEffect(() => {
-    fetch("/api/v1/scenario/venues")
+    fetch(getApiUrl("/api/v1/scenario/venues"))
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -69,7 +67,7 @@ export const VenuesView: React.FC = () => {
 
   useEffect(() => {
     // Fetch live meteorological telemetry for Patia, Bhubaneswar
-    fetch("/api/v1/weather/live-bhubaneswar")
+    fetch(getApiUrl("/api/v1/weather/live-bhubaneswar"))
       .then((res) => res.json())
       .then((data) => {
         if (data && data.temperature_celsius) {

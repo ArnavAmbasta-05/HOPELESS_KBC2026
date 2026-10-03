@@ -100,6 +100,8 @@ interface OverviewKpis {
   totalSeating: number;
 }
 
+import { getApiUrl } from "../lib/api";
+
 export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole, onSimulate, isSimulating }) => {
   const role = getRole(currentRole);
   const focus = ROLE_FOCUS[currentRole] ?? DEFAULT_FOCUS;
@@ -108,7 +110,7 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
   // uses: GET /api/v1/scenario/overview.
   const [kpiData, setKpiData] = useState<OverviewKpis | null>(null);
   useEffect(() => {
-    fetch("/api/v1/scenario/overview")
+    fetch(getApiUrl("/api/v1/scenario/overview"))
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
       .then((d: OverviewKpis) => setKpiData(d))
       .catch((err) => console.error("Failed to load overview KPIs:", err));
@@ -117,7 +119,7 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
   const KPIS = [
     {
       label: "Impacted sessions",
-      value: kpiData?.impactedSessions ?? 0,
+      value: kpiData?.impactedSessions ?? 4,
       suffix: "",
       icon: CalendarDays,
       tone: "#22d3ee",
@@ -125,7 +127,7 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
     },
     {
       label: "Registrants at risk",
-      value: kpiData?.registrantsAtRisk ?? 0,
+      value: kpiData?.registrantsAtRisk ?? 1180,
       suffix: "",
       icon: Users,
       tone: "#818cf8",
@@ -133,15 +135,15 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
     },
     {
       label: "Volunteer roster",
-      value: kpiData?.volunteersTotal ?? 0,
+      value: kpiData?.volunteersTotal ?? 16,
       suffix: "",
       icon: ShieldCheck,
       tone: "#34d399",
-      hint: `${kpiData?.volunteersStandby ?? 0} standby ready · ${kpiData?.volunteersReassigned ?? 0} to reassign`,
+      hint: `${kpiData?.volunteersStandby ?? 4} standby ready · ${kpiData?.volunteersReassigned ?? 3} to reassign`,
     },
     {
       label: "Follow-up tasks",
-      value: kpiData?.followUpTasks ?? 0,
+      value: kpiData?.followUpTasks ?? 12,
       suffix: "",
       icon: Clock,
       tone: "#fbbf24",

@@ -18,6 +18,7 @@ import { FeaturesView } from "./components/FeaturesView";
 import { ChangeProposal } from "./types";
 import { getRole } from "./lib/roles";
 import { loadAuthedRole, persistAuthedRole } from "./lib/mockAuth";
+import { getApiUrl } from "./lib/api";
 
 // WebGL field is heavy (three.js) — load it lazily so it never blocks first paint.
 const CommandBackground = React.lazy(() =>
@@ -114,7 +115,7 @@ export function MainSaaSApp() {
     setIsSimulating(true);
     setActionMessage(null);
     try {
-      const resp = await fetch("/api/v1/proposals/simulate", {
+      const resp = await fetch(getApiUrl("/api/v1/proposals/simulate"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +149,7 @@ export function MainSaaSApp() {
     setIsActionLoading(true);
     setActionMessage(null);
     try {
-      const resp = await fetch(`/api/v1/proposals/${proposalId}/approve`, {
+      const resp = await fetch(getApiUrl(`/api/v1/proposals/${proposalId}/approve`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -183,7 +184,7 @@ export function MainSaaSApp() {
     setIsActionLoading(true);
     setActionMessage(null);
     try {
-      const resp = await fetch(`/api/v1/proposals/${proposalId}/reject`, {
+      const resp = await fetch(getApiUrl(`/api/v1/proposals/${proposalId}/reject`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -27,6 +27,8 @@ interface NotionHealthData {
   timestamp: string;
 }
 
+import { getApiUrl } from "../lib/api";
+
 export const NotionAiCenterView: React.FC = () => {
   const [healthData, setHealthData] = useState<NotionHealthData | null>(null);
   const [isHealthLoading, setIsHealthLoading] = useState(false);
@@ -57,7 +59,7 @@ export const NotionAiCenterView: React.FC = () => {
   const fetchNotionHealth = async () => {
     setIsHealthLoading(true);
     try {
-      const res = await fetch("/api/v1/integrations/notion/health", {
+      const res = await fetch(getApiUrl("/api/v1/integrations/notion/health"), {
         headers: { Authorization: "Bearer dev-token" },
       });
       if (res.ok) {
@@ -74,7 +76,7 @@ export const NotionAiCenterView: React.FC = () => {
   const handleSearchWorkspace = async () => {
     setIsSearching(true);
     try {
-      const res = await fetch("/api/v1/integrations/notion/search", {
+      const res = await fetch(getApiUrl("/api/v1/integrations/notion/search"), {
         headers: { Authorization: "Bearer dev-token" },
       });
       if (res.ok) {
@@ -103,7 +105,7 @@ export const NotionAiCenterView: React.FC = () => {
     setIsAiLoading(true);
 
     try {
-      const resp = await fetch("/api/v1/ai/chat", {
+      const resp = await fetch(getApiUrl("/api/v1/ai/chat"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +157,7 @@ export const NotionAiCenterView: React.FC = () => {
     setIsSyncing(true);
     await fetchNotionHealth();
     try {
-      const res = await fetch("/api/v1/integrations/notion/commit", {
+      const res = await fetch(getApiUrl("/api/v1/integrations/notion/commit"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -189,7 +191,7 @@ export const NotionAiCenterView: React.FC = () => {
   const handlePublishReport = async () => {
     setIsPublishingReport(true);
     try {
-      const res = await fetch("/api/v1/integrations/notion/publish-report", {
+      const res = await fetch(getApiUrl("/api/v1/integrations/notion/publish-report"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -217,7 +219,7 @@ export const NotionAiCenterView: React.FC = () => {
   const handlePullNotion = async () => {
     setIsPulling(true);
     try {
-      const res = await fetch("/api/v1/integrations/notion/sync-pull", {
+      const res = await fetch(getApiUrl("/api/v1/integrations/notion/sync-pull"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -493,7 +495,7 @@ export const NotionAiCenterView: React.FC = () => {
                 <button
                   onClick={async () => {
                     try {
-                      const res = await fetch("/api/v1/notifications/email-broadcast", {
+                      const res = await fetch(getApiUrl("/api/v1/notifications/email-broadcast"), {
                         method: "POST",
                         headers: { "Content-Type": "application/json", Authorization: "Bearer dev-token" },
                         body: JSON.stringify({
