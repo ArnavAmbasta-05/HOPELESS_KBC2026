@@ -81,8 +81,9 @@ def setup_telemetry(
 
     # --- Traces ----------------------------------------------------------
     tracer_provider = TracerProvider(resource=resource)
-    if OTLPSpanExporter is not None:
-        span_exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
+    explicit_otlp = otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if OTLPSpanExporter is not None and explicit_otlp:
+        span_exporter = OTLPSpanExporter(endpoint=explicit_otlp, insecure=True)
         tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
     elif env == "development":
         # In dev without OTLP collector, don't spam stdout unless configured
