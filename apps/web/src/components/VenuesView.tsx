@@ -38,133 +38,38 @@ export interface VenueDetail {
   };
 }
 
-export const KIIT_VENUES: VenueDetail[] = [
-  {
-    id: "ven_main_aud",
-    name: "Main Auditorium",
-    campus: "Campus 6 (International)",
-    building: "Building A — Convention Wing",
-    capacity: 1600,
-    currentOccupancy: 0,
-    type: "Indoor Auditorium",
-    status: "disrupted",
-    disruptionReason: "Ceiling AC leak reported by Estate Office (08:00 AM). 4 major sessions displaced.",
-    requiredStaff: { stageLead: 2, avTechnicians: 4, volunteers: 12, security: 6 },
-    equipmentInventory: [
-      "JBL VTX Dual Line Array PA",
-      "Christie 4K 20,000 Lumens Laser Projector",
-      "GrandMA3 Lighting Console",
-      "12-Channel Shure Wireless Mic Array",
-      "Motorized Flying Truss Rig",
-    ],
-    powerBackup: "Dual 500kVA Dedicated Diesel Genset + 30-min Online UPS",
-    coordinates: { lat: 20.3542, lng: 85.8182 },
-  },
-  {
-    id: "ven_open_air",
-    name: "Open Air Theatre (OAT)",
-    campus: "Campus 6 (Rose Garden Complex)",
-    building: "Building C — Amphitheatre Ground",
-    capacity: 600,
-    currentOccupancy: 570,
-    type: "Outdoor Amphitheatre",
-    status: "active",
-    disruptionReason: "Relocated destination for Opening Ceremony & Valedictory. Rain resilience monitor active.",
-    requiredStaff: { stageLead: 1, avTechnicians: 3, volunteers: 8, security: 4 },
-    equipmentInventory: [
-      "Weather-Resistant Dual Column Array",
-      "High-Brightness Daylight LED Wall (8m x 4m)",
-      "Portable Acoustic Shell Rigs",
-      "Deployable Waterproof Canopy Rig (Standby)",
-    ],
-    powerBackup: "Dedicated 250kVA Mobile Generator",
-    coordinates: { lat: 20.3550, lng: 85.8190 },
-    weatherSensors: {
-      temp: "29°C",
-      rainRisk: "12% (Clear Sky)",
-      windSpeed: "8 km/h NW",
-    },
-  },
-  {
-    id: "ven_seminar",
-    name: "Campus 7 Auditorium / Seminar Hall",
-    campus: "Campus 7 (Technology)",
-    building: "Building B — Academic Core",
-    capacity: 250,
-    currentOccupancy: 180,
-    type: "Seminar Hall",
-    status: "active",
-    requiredStaff: { stageLead: 1, avTechnicians: 2, volunteers: 4, security: 2 },
-    equipmentInventory: [
-      "Bose F1 Flexible Array System",
-      "Dual Sony 85-inch 4K Displays",
-      "PTZ Auto-Tracking Camera for Live Stream",
-      "Digital Interactive Podium",
-    ],
-    powerBackup: "Grid + 120kVA Campus UPS",
-    coordinates: { lat: 20.3585, lng: 85.8214 },
-  },
-  {
-    id: "ven_ksac_chintan",
-    name: "Chintan Auditorium",
-    campus: "Campus 15 (KSAC)",
-    building: "Student Activity Centre (KSAC)",
-    capacity: 200,
-    currentOccupancy: 95,
-    type: "Seminar Hall",
-    status: "standby",
-    requiredStaff: { stageLead: 1, avTechnicians: 1, volunteers: 3, security: 2 },
-    equipmentInventory: [
-      "Yamaha StagePas PA System",
-      "Laser Ultra-Short-Throw Projector",
-      "Hybrid Video Conferencing Hub",
-    ],
-    powerBackup: "Campus Grid + 60kVA UPS",
-    coordinates: { lat: 20.3621, lng: 85.8245 },
-  },
-  {
-    id: "ven_lh3",
-    name: "Lecture Hall Complex LH-3",
-    campus: "Campus 12 (Law & Humanities)",
-    building: "Building D — North Wing",
-    capacity: 150,
-    currentOccupancy: 0,
-    type: "Lecture Complex",
-    status: "standby",
-    requiredStaff: { stageLead: 0, avTechnicians: 1, volunteers: 2, security: 1 },
-    equipmentInventory: ["Wall-Mounted Audio Array", "Interactive Smart Whiteboard", "Ceiling Mic Pods"],
-    powerBackup: "Campus UPS",
-    coordinates: { lat: 20.3590, lng: 85.8175 },
-  },
-  {
-    id: "ven_convention_c3",
-    name: "Convention Centre Hall",
-    campus: "Campus 3 (Kathajodi)",
-    building: "Central Library & Convention Hub",
-    capacity: 800,
-    currentOccupancy: 0,
-    type: "Indoor Auditorium",
-    status: "standby",
-    requiredStaff: { stageLead: 1, avTechnicians: 3, volunteers: 6, security: 4 },
-    equipmentInventory: [
-      "Line Array Acoustic System",
-      "12K Barco Projector",
-      "Simultaneous Interpretation Booths",
-    ],
-    powerBackup: "Dedicated 300kVA Genset",
-    coordinates: { lat: 20.3480, lng: 85.8120 },
-  },
-];
+// Venue data is served live by the backend scenario service
+// (GET /api/v1/scenario/venues) — the SAME golden-seed source the CP-SAT
+// solver, AI copilot and dependency engine use. No hardcoded roster here.
 
 export const VenuesView: React.FC = () => {
-  const [venues, setVenues] = useState<VenueDetail[]>(KIIT_VENUES);
+  const [venues, setVenues] = useState<VenueDetail[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [selectedVenue, setSelectedVenue] = useState<VenueDetail | null>(KIIT_VENUES[0]);
+  const [selectedVenue, setSelectedVenue] = useState<VenueDetail | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Load venues from the backend scenario service (same source the solver uses).
+  useEffect(() => {
+    fetch("/api/v1/scenario/venues")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data: VenueDetail[]) => {
+        setVenues(data);
+        setSelectedVenue(data[0] ?? null);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        console.error("Failed to load venues:", err);
+        setLoadError("Unable to load venues from the operations API.");
+      });
+  }, []);
 
   useEffect(() => {
     // Fetch live meteorological telemetry for Patia, Bhubaneswar
-    fetch("/weather/live-bhubaneswar")
+    fetch("/api/v1/weather/live-bhubaneswar")
       .then((res) => res.json())
       .then((data) => {
         if (data && data.temperature_celsius) {
@@ -209,16 +114,25 @@ export const VenuesView: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
                 <span className="text-slate-400">Total seating:</span>{" "}
-                <span className="font-bold text-cyan-300">3,600</span>
+                <span className="font-bold text-cyan-300">
+                  {venues.reduce((sum, v) => sum + v.capacity, 0).toLocaleString()}
+                </span>
               </div>
               <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
                 <span className="text-slate-400">Facilities:</span>{" "}
-                <span className="font-bold text-white">6</span>
+                <span className="font-bold text-white">{venues.length}</span>
               </div>
             </div>
           }
         />
       </Reveal>
+
+      {loadError && (
+        <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-200 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{loadError} Ensure the API is running on :8000.</span>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

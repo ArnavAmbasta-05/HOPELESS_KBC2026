@@ -271,3 +271,30 @@ def require_permission(
         return user
 
     return _check
+
+
+def require_super_admin():
+    """FastAPI dependency: allow ONLY super_admin.
+
+    Used for destructive, event-wide actions such as cancelling an event, which
+    must never be performed by a functional lead without super-admin authority.
+    """
+
+    async def _check(
+        user: Annotated[AuthUser, Depends(get_current_user)],
+    ) -> AuthUser:
+        is_super = Role.SUPER_ADMIN in user.roles
+        logger.info(
+            "AuthZ super-admin gate: user=%s allowed=%s roles=%s",
+            user.user_id,
+            is_super,
+            user.roles,
+        )
+        if not is_super:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only a super admin may perform this action (event cancellation is super-admin gated).",
+            )
+        return user
+
+    return _check

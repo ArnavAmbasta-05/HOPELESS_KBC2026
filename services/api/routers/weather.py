@@ -13,7 +13,7 @@ from packages.contracts.weather import (
 )
 from services.workers.weather.service import WeatherService
 
-router = APIRouter(prefix="/weather", tags=["weather"])
+router = APIRouter(prefix="/api/v1/weather", tags=["weather"])
 weather_service = WeatherService()
 
 

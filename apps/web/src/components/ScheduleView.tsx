@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CalendarDays,
   Clock,
@@ -35,111 +35,36 @@ export interface ScheduledEvent {
   status: "Scheduled" | "Relocated" | "In Progress" | "Completed";
 }
 
-export const KIIT_SCHEDULE: ScheduledEvent[] = [
-  {
-    id: "ses_opening",
-    title: "Opening Ceremony & Inaugural Keynote",
-    date: "2026-10-15",
-    timeWindow: "10:00 – 10:45 IST",
-    hostingSociety: "KSAC & KIIT Student Council",
-    speaker: {
-      name: "Prof. S. Acharya",
-      designation: "Vice Chancellor, KIIT University",
-      arrivalGate: "Gate 1 (Campus 6 VIP Gate)",
-      vipEscortAssigned: "Arjun Sharma (Lead Volunteer)",
-    },
-    originalVenue: "Main Auditorium (Campus 6)",
-    currentVenue: "Open Air Theatre (Campus 6)",
-    isRelocated: true,
-    registrantCount: 380,
-    hostelDistribution: [
-      { hostelName: "King's Palace KP-6 (Boys)", count: 140, shuttleRoute: "Route 1 (KP-6 -> C6/C7)" },
-      { hostelName: "King's Palace KP-7 (Boys)", count: 110, shuttleRoute: "Route 1 (KP-7 -> C6/C7)" },
-      { hostelName: "Queen's Castle QC-1 (Girls)", count: 80, shuttleRoute: "Route 2 (QC -> C6/C7)" },
-      { hostelName: "Day Scholars / Guests", count: 50, shuttleRoute: "Direct Campus Entry" },
-    ],
-    category: "Ceremony",
-    status: "Relocated",
-  },
-  {
-    id: "ses_keynote_ai",
-    title: "Keynote: AI in Autonomous Event Operations & FinTech",
-    date: "2026-10-15",
-    timeWindow: "11:00 – 12:00 IST",
-    hostingSociety: "KIIT AI Society & IEEE Student Branch",
-    speaker: {
-      name: "Dr. Rohit Mishra",
-      designation: "Principal AI Architect, Ex-Google / Anthropic Contributor",
-      arrivalGate: "Gate 2 (Campus 7 Link Gate)",
-      vipEscortAssigned: "Pooja Verma (Tech Volunteer)",
-    },
-    originalVenue: "Main Auditorium (Campus 6)",
-    currentVenue: "Auditorium / Seminar Hall (Campus 7)",
-    isRelocated: true,
-    registrantCount: 230,
-    hostelDistribution: [
-      { hostelName: "King's Palace KP-14 (Tech Hub)", count: 120, shuttleRoute: "Route 3 (KP-14 -> C7)" },
-      { hostelName: "Queen's Castle QC-2 (Girls)", count: 60, shuttleRoute: "Route 2 (QC -> C7)" },
-      { hostelName: "King's Palace KP-9", count: 50, shuttleRoute: "Route 1 (KP-9 -> C7)" },
-    ],
-    category: "Keynote",
-    status: "Relocated",
-  },
-  {
-    id: "ses_panel_startups",
-    title: "Panel: Scaling Student Startups from Campus to Series A",
-    date: "2026-10-15",
-    timeWindow: "14:00 – 15:00 IST",
-    hostingSociety: "KIIT E-Cell (Entrepreneurship Cell)",
-    speaker: {
-      name: "3 Alumni Founders",
-      designation: "Shark Tank Featured Founders (KIIT TBI Incubatees)",
-      arrivalGate: "Gate 1 (Campus 6 Main Entry)",
-      vipEscortAssigned: "Vikram Das (E-Cell Coordinator)",
-    },
-    originalVenue: "Main Auditorium (Campus 6)",
-    currentVenue: "Open Air Theatre (Campus 6)",
-    isRelocated: true,
-    registrantCount: 180,
-    hostelDistribution: [
-      { hostelName: "King's Palace KP-6", count: 70, shuttleRoute: "Route 1" },
-      { hostelName: "Queen's Castle QC-3", count: 60, shuttleRoute: "Route 2" },
-      { hostelName: "Campus 15 Hostels", count: 50, shuttleRoute: "Route 3" },
-    ],
-    category: "Panel Discussion",
-    status: "Relocated",
-  },
-  {
-    id: "ses_valedictory",
-    title: "Grand Valedictory Ceremony & Conclave Awards",
-    date: "2026-10-15",
-    timeWindow: "17:00 – 18:00 IST",
-    hostingSociety: "KBC 2026 Steering Committee",
-    speaker: {
-      name: "Registrar & Conclave Director",
-      designation: "KIIT University Leadership",
-      arrivalGate: "Gate 1 (VIP Entry)",
-      vipEscortAssigned: "Stage Management Core",
-    },
-    originalVenue: "Main Auditorium (Campus 6)",
-    currentVenue: "Open Air Theatre (Campus 6)",
-    isRelocated: true,
-    registrantCount: 390,
-    hostelDistribution: [
-      { hostelName: "All Hostels (KP-6, KP-7, KP-14)", count: 240, shuttleRoute: "Fleet Shuttles 1-4" },
-      { hostelName: "All Hostels (QC-1, QC-2, QC-3)", count: 150, shuttleRoute: "Fleet Shuttles 5-6" },
-    ],
-    category: "Ceremony",
-    status: "Relocated",
-  },
-];
+// Schedule data (with the solver's relocation applied) is served live by
+// the backend scenario service: GET /api/v1/scenario/sessions.
 
 export const ScheduleView: React.FC = () => {
-  const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(KIIT_SCHEDULE[0]);
+  const [events, setEvents] = useState<ScheduledEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduledEvent | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const filteredEvents = KIIT_SCHEDULE.filter((ev) => {
+  // Sessions (with the solver's relocation applied) are served live by the
+  // backend scenario service: GET /api/v1/scenario/sessions.
+  useEffect(() => {
+    fetch("/api/v1/scenario/sessions")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data: ScheduledEvent[]) => {
+        setEvents(data);
+        setSelectedEvent(data[0] ?? null);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        console.error("Failed to load schedule:", err);
+        setLoadError("Unable to load the schedule from the operations API.");
+      });
+  }, []);
+
+  const filteredEvents = events.filter((ev) => {
     const matchesSearch =
       ev.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ev.hostingSociety.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -161,7 +86,9 @@ export const ScheduleView: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
                 <span className="text-slate-400">Audience:</span>{" "}
-                <span className="font-bold text-cyan-300">1,180</span>
+                <span className="font-bold text-cyan-300">
+                  {events.reduce((sum, e) => sum + e.registrantCount, 0).toLocaleString()}
+                </span>
               </div>
               <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
                 <span className="text-slate-400">Date:</span>{" "}
@@ -171,6 +98,13 @@ export const ScheduleView: React.FC = () => {
           }
         />
       </Reveal>
+
+      {loadError && (
+        <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-200 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{loadError} Ensure the API is running on :8000.</span>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

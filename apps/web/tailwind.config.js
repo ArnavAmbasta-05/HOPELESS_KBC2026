@@ -45,9 +45,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Outfit', 'Inter', 'sans-serif'],
-        head: ['Outfit', 'Inter', 'sans-serif'],
+        sans: ['Satoshi', '"General Sans"', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['"Clash Display"', '"Space Grotesk"', 'Satoshi', 'sans-serif'],
+        head: ['"Clash Display"', 'Satoshi', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'Fira Code', 'monospace'],
       },
       letterSpacing: {

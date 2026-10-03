@@ -37,6 +37,9 @@ from services.api.routers import (
     venues_router,
     weather_router,
     carto_router,
+    scenario_router,
+    governance_router,
+    itinerary_router,
 )
 
 
@@ -57,10 +60,10 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# CORS — allow the dev frontend origins
+# CORS — allow local dev and deployed frontend origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,6 +100,9 @@ app.include_router(crowd_router)
 app.include_router(weather_router)
 app.include_router(knowledge_router)
 app.include_router(carto_router)
+app.include_router(scenario_router)
+app.include_router(governance_router)
+app.include_router(itinerary_router)
 
 
 
@@ -163,16 +169,33 @@ logger.info("app.started", version=app.version)
 
 
 # ---------------------------------------------------------------------------
-# Root & Health Routes
+# Root, Health & Static SPA Routes (Supports 1-Service Cloud Deployment)
 # ---------------------------------------------------------------------------
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+WEB_DIST = Path(__file__).resolve().parent.parent.parent / "apps" / "web" / "dist"
 
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Liveness probe."""
     return {"status": "ok"}
 
+if WEB_DIST.exists():
+    app.mount("/assets", StaticFiles(directory=str(WEB_DIST / "assets")), name="assets")
 
-@app.get("/")
-async def root() -> dict[str, str]:
-    """Root redirect hint."""
-    return {"message": "KoreX API is running. See /docs for OpenAPI spec."}
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        if full_path.startswith("api/") or full_path.startswith("metrics"):
+            raise HTTPException(status_code=404, detail="API route not found")
+        file_path = WEB_DIST / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(WEB_DIST / "index.html")
+else:
+    @app.get("/")
+    async def root() -> dict[str, str]:
+        """Root redirect hint."""
+        return {"message": "KoreX API is running. See /docs for OpenAPI spec."}
+

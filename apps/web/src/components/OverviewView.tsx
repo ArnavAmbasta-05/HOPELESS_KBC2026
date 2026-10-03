@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -8,14 +8,15 @@ import {
   ArrowRight,
   ShieldCheck,
   GitBranch,
+  Share2,
   Sparkles,
   MapPin,
   CalendarDays,
   Radio,
-  Bus,
   Activity,
   Gauge,
   Zap,
+  ArrowUpRight,
 } from "lucide-react";
 import { ChangeProposal } from "../types";
 import { NavSection } from "./Sidebar";
@@ -24,7 +25,7 @@ import {
   Reveal,
   RevealGroup,
   Item,
-  StatCard,
+  AnimatedNumber,
   SectionHeader,
   Pill,
   PrimaryButton,
@@ -45,45 +46,15 @@ const NAV_CARDS: Record<
   Exclude<NavSection, "participant" | "overview">,
   { title: string; desc: string; icon: React.ElementType; tone: string }
 > = {
-  venues: {
-    title: "Venues & Capacities",
-    desc: "Inspect 6 auditoriums, seat caps, AV rigs & staff rosters.",
-    icon: Building2,
-    tone: "#22d3ee",
-  },
-  schedule: {
-    title: "Master Schedule",
-    desc: "Date-wise sessions, VIP guests & hostel transport mapping.",
-    icon: CalendarDays,
-    tone: "#818cf8",
-  },
-  simulation: {
-    title: "Simulation Studio",
-    desc: "Run the CP-SAT solver and review change proposals.",
-    icon: GitBranch,
-    tone: "#a855f7",
-  },
-  map: {
-    title: "Campus Digital Twin",
-    desc: "Track live shuttles, gate crowds & walking corridors.",
-    icon: MapPin,
-    tone: "#2dd4bf",
-  },
-  volunteers: {
-    title: "Volunteers & Shifts",
-    desc: "Skill-match, rebalance shifts & dispatch standby crew.",
-    icon: Users,
-    tone: "#34d399",
-  },
-  "notion-ai": {
-    title: "Notion & AI Co-Pilot",
-    desc: "Monitor live 32-page sync & query the AI supervisor.",
-    icon: Sparkles,
-    tone: "#fbbf24",
-  },
+  venues: { title: "Venues & Capacities", desc: "Auditoriums · seat caps · AV rigs · staff.", icon: Building2, tone: "#22d3ee" },
+  schedule: { title: "Master Schedule", desc: "Sessions · VIP guests · hostel transport.", icon: CalendarDays, tone: "#818cf8" },
+  dependencies: { title: "Dependency Graph", desc: "Blast radius · hard & soft impact edges.", icon: Share2, tone: "#f472b6" },
+  simulation: { title: "Simulation Studio", desc: "CP-SAT solver · change proposals.", icon: GitBranch, tone: "#a855f7" },
+  map: { title: "Campus Digital Twin", desc: "Live shuttles · gates · corridors.", icon: MapPin, tone: "#2dd4bf" },
+  volunteers: { title: "Volunteers & Shifts", desc: "Skill match · rebalance · standby.", icon: Users, tone: "#34d399" },
+  "notion-ai": { title: "Notion & AI Co-Pilot", desc: "Live 32-page sync · AI supervisor.", icon: Sparkles, tone: "#fbbf24" },
 };
 
-// Per-role "focus" cards — the three things this persona should watch now.
 const ROLE_FOCUS: Record<string, { title: string; value: string; detail: string; tone: string }[]> = {
   transport_lead: [
     { title: "Shuttle 2 fault", value: "Rerouted", detail: "Coach Bus A dispatched to Bay 4, 50 seats online.", tone: "#fb7185" },
@@ -118,49 +89,99 @@ const DEFAULT_FOCUS = [
   { title: "Task at risk", value: "N08", detail: "0-min slack — escalated to Stage Lead.", tone: "#fb7185" },
 ];
 
+interface OverviewKpis {
+  impactedSessions: number;
+  registrantsAtRisk: number;
+  volunteersTotal: number;
+  volunteersReassigned: number;
+  volunteersStandby: number;
+  followUpTasks: number;
+  venuesTotal: number;
+  totalSeating: number;
+}
+
 export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole, onSimulate, isSimulating }) => {
   const role = getRole(currentRole);
   const focus = ROLE_FOCUS[currentRole] ?? DEFAULT_FOCUS;
-  const quickSections = role.sections.filter(
-    (s) => s !== "overview"
-  ) as Exclude<NavSection, "participant" | "overview">[];
+
+  // KPIs are derived server-side from the same golden-seed scenario the solver
+  // uses: GET /api/v1/scenario/overview.
+  const [kpiData, setKpiData] = useState<OverviewKpis | null>(null);
+  useEffect(() => {
+    fetch("/api/v1/scenario/overview")
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((d: OverviewKpis) => setKpiData(d))
+      .catch((err) => console.error("Failed to load overview KPIs:", err));
+  }, []);
+
+  const KPIS = [
+    {
+      label: "Impacted sessions",
+      value: kpiData?.impactedSessions ?? 0,
+      suffix: "",
+      icon: CalendarDays,
+      tone: "#22d3ee",
+      hint: "Sessions at the unavailable venue — all require re-homing",
+    },
+    {
+      label: "Registrants at risk",
+      value: kpiData?.registrantsAtRisk ?? 0,
+      suffix: "",
+      icon: Users,
+      tone: "#818cf8",
+      hint: "SMS + app push queued across affected hostel cohorts",
+    },
+    {
+      label: "Volunteer roster",
+      value: kpiData?.volunteersTotal ?? 0,
+      suffix: "",
+      icon: ShieldCheck,
+      tone: "#34d399",
+      hint: `${kpiData?.volunteersStandby ?? 0} standby ready · ${kpiData?.volunteersReassigned ?? 0} to reassign`,
+    },
+    {
+      label: "Follow-up tasks",
+      value: kpiData?.followUpTasks ?? 0,
+      suffix: "",
+      icon: Clock,
+      tone: "#fbbf24",
+      hint: "Re-home, equipment, comms and cohort-notification actions",
+    },
+  ];
+  const quickSections = role.sections.filter((s) => s !== "overview") as Exclude<
+    NavSection,
+    "participant" | "overview"
+  >[];
 
   return (
-    <div className="space-y-10">
-      {/* ===== HERO ===== */}
-      <Reveal>
-        <div className="relative overflow-hidden rounded-3xl glass-panel aurora-ring">
-          <div className="absolute inset-0 bg-techgrid opacity-60" />
-          <div
-            className="absolute -top-24 -right-16 h-72 w-72 rounded-full blur-3xl opacity-30"
-            style={{ background: `radial-gradient(circle, ${role.accent[0]}, transparent 70%)` }}
-          />
-          <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 p-7 md:p-9">
-            <div className="lg:col-span-7 space-y-5">
+    <div className="space-y-5 md:space-y-6">
+      {/* ===== HERO BAND — text tile + open 3D core ===== */}
+      <section className="grid grid-cols-12 gap-5">
+        <Reveal as="div" className="col-span-12 lg:col-span-7 xl:col-span-8">
+          <div className="bento aurora-ring p-7 md:p-10 min-h-[360px] h-full flex flex-col justify-center">
+            <div className="absolute inset-0 bg-techgrid opacity-50" />
+            <div className="relative space-y-5 max-w-2xl">
               <div className="flex flex-wrap items-center gap-2">
-                <Pill tone="cyan">
-                  <LiveDot /> {role.name}
-                </Pill>
+                <Pill tone="cyan"><LiveDot /> {role.name}</Pill>
                 <Pill tone="violet">KBC 2026 · KIIT University</Pill>
               </div>
-              <h1 className="font-display text-3xl md:text-[42px] font-bold leading-[1.05] tracking-tight text-white">
-                The operation, <span className="text-aurora">orchestrated</span>
-                <br className="hidden md:block" /> in real time.
+              <h1 className="font-display text-4xl md:text-5xl xl:text-6xl font-bold leading-[1.02] tracking-tight text-white">
+                The operation,
+                <br />
+                <span className="text-aurora">orchestrated</span> live.
               </h1>
-              <p className="text-sm md:text-[15px] text-slate-300/90 leading-relaxed max-w-xl">
-                {role.mandate} KoreX fuses a live digital twin, constraint solvers and a grounded AI
-                supervisor into one command surface — so a venue outage becomes a reviewed plan, not a crisis.
+              <p className="text-[15px] text-slate-300/90 leading-relaxed max-w-xl">
+                {role.mandate} KoreX fuses a live digital twin, constraint solvers and a grounded AI supervisor into
+                one command surface — turning a venue outage into a reviewed plan, not a crisis.
               </p>
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 {role.sections.includes("simulation") ? (
                   <PrimaryButton onClick={() => onNavigate("simulation")} icon={<GitBranch className="w-4 h-4" />}>
-                    Open Simulation Studio
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    Open Simulation Studio <ArrowRight className="w-3.5 h-3.5" />
                   </PrimaryButton>
                 ) : (
                   <PrimaryButton onClick={() => onNavigate(quickSections[0] ?? "overview")} icon={<Zap className="w-4 h-4" />}>
-                    Go to my console
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    Go to my console <ArrowRight className="w-3.5 h-3.5" />
                   </PrimaryButton>
                 )}
                 <GhostButton onClick={onSimulate} icon={<Radio className={`w-4 h-4 ${isSimulating ? "animate-spin text-cyan-300" : ""}`} />}>
@@ -168,55 +189,75 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
                 </GhostButton>
               </div>
             </div>
-
-            {/* vitals */}
-            <div className="lg:col-span-5">
-              <Tilt max={7}>
-                <div className="rounded-2xl border border-white/10 bg-[#070b16]/70 p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="kicker">Operation Vitals</span>
-                    <Gauge className="w-4 h-4 text-cyan-300" />
-                  </div>
-                  {[
-                    { l: "Plan readiness", v: 98, c: "#34d399" },
-                    { l: "Constraint satisfaction", v: 100, c: "#22d3ee" },
-                    { l: "Comms delivered", v: 92, c: "#818cf8" },
-                  ].map((m) => (
-                    <div key={m.l} className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400">{m.l}</span>
-                        <span className="font-mono font-bold" style={{ color: m.c }}>
-                          {m.v}%
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                        <motion.div
-                          className="h-full rounded-full"
-                          style={{ backgroundColor: m.c }}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${m.v}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  <div className="pt-2 border-t border-white/5 flex items-center gap-2 text-[11px] text-slate-400">
-                    <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>All solvers green · last solve &lt; 2s ago</span>
-                  </div>
-                </div>
-              </Tilt>
-            </div>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
+
+        {/* Right column: open to the 3D core, with a floating translucent vitals card */}
+        <Reveal as="div" delay={0.1} className="col-span-12 lg:col-span-5 xl:col-span-4">
+          <div className="relative min-h-[360px] h-full flex flex-col justify-between rounded-3xl overflow-hidden">
+            <div className="flex items-center justify-between px-1 pt-1">
+              <span className="kicker" style={{ color: "var(--role-accent)" }}>Live digital twin</span>
+              <span className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400">
+                <LiveDot /> rendering
+              </span>
+            </div>
+
+            {/* the 3D operations core glows through this open space */}
+            <div className="flex-1 flex items-center justify-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="font-display text-[11px] tracking-[0.3em] text-white/30 uppercase rotate-0"
+              >
+                operations core
+              </motion.div>
+            </div>
+
+            <Tilt max={6}>
+              <div className="rounded-2xl glass-soft p-5 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="kicker">Operation vitals</span>
+                  <Gauge className="w-4 h-4 text-cyan-300" />
+                </div>
+                {[
+                  { l: "Plan readiness", v: 98, c: "#34d399" },
+                  { l: "Constraint satisfaction", v: 100, c: "#22d3ee" },
+                  { l: "Comms delivered", v: 92, c: "#818cf8" },
+                ].map((m) => (
+                  <div key={m.l} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-slate-400">{m.l}</span>
+                      <span className="font-mono font-bold" style={{ color: m.c }}>{m.v}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: m.c }}
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${m.v}%` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1] }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div className="pt-1.5 border-t border-white/5 flex items-center gap-2 text-[11px] text-slate-400">
+                  <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>All solvers green · last solve &lt; 2s ago</span>
+                </div>
+              </div>
+            </Tilt>
+          </div>
+        </Reveal>
+      </section>
 
       {/* ===== INCIDENT BANNER ===== */}
       <Reveal delay={0.05}>
-        <div className="relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-950/60 via-[#0a0f1e]/80 to-[#0a0f1e]/80 p-5 md:p-6">
+        <div className="relative overflow-hidden rounded-3xl bento p-5 md:p-6" style={{ borderColor: "rgba(251,113,133,0.3)" }}>
           <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-rose-400 to-rose-600" />
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full blur-3xl opacity-20 bg-rose-500" />
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="w-11 h-11 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-5 h-5 text-rose-300 animate-pulse" />
@@ -226,88 +267,66 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
                   <Pill tone="rose">Active outage · 08:00 IST</Pill>
                   <span className="text-[11px] text-slate-400">Source: Notion webhook (Estate Office)</span>
                 </div>
-                <h2 className="font-display text-lg font-bold text-white">
+                <h2 className="font-display text-lg md:text-xl font-bold text-white">
                   Main Auditorium unavailable — 08:00 to 23:59
                 </h2>
                 <p className="text-[13px] text-slate-300/90 max-w-2xl leading-relaxed">
-                  Emergency ceiling AC leak. 4 conclave sessions (1,180 registered attendees) require re-homing
-                  with zero schedule collisions.
+                  Emergency ceiling AC leak. 4 conclave sessions (1,180 registered attendees) require re-homing with
+                  zero schedule collisions.
                 </p>
               </div>
             </div>
             {role.sections.includes("simulation") && (
               <PrimaryButton onClick={() => onNavigate("simulation")} className="shrink-0" icon={<GitBranch className="w-4 h-4" />}>
-                Resolve now
-                <ArrowRight className="w-3.5 h-3.5" />
+                Resolve now <ArrowRight className="w-3.5 h-3.5" />
               </PrimaryButton>
             )}
           </div>
         </div>
       </Reveal>
 
-      {/* ===== KPI STRIP ===== */}
-      <section className="space-y-4">
-        <SectionHeader kicker="Live metrics" title="Situational snapshot" />
-        <RevealGroup className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Item>
-            <StatCard
-              label="Impacted sessions"
-              value={4}
-              icon={<CalendarDays className="w-4 h-4" />}
-              tone="#22d3ee"
-              hint="Opening (380) · Keynote (230) · Panel (180) · Prize (390) — 100% re-homed"
-            />
-          </Item>
-          <Item>
-            <StatCard
-              label="Registrants at risk"
-              value={1180}
-              icon={<Users className="w-4 h-4" />}
-              tone="#818cf8"
-              hint="SMS + app push broadcast queued across 6 hostel cohorts"
-            />
-          </Item>
-          <Item>
-            <StatCard
-              label="Volunteer shifts intact"
-              value={15}
-              suffix=" / 16"
-              icon={<ShieldCheck className="w-4 h-4" />}
-              tone="#34d399"
-              hint="4 reassigned + 1 standby activated (Arjun for Keynote AV)"
-            />
-          </Item>
-          <Item>
-            <StatCard
-              label="Follow-up tasks"
-              value={17}
-              icon={<Clock className="w-4 h-4" />}
-              tone="#fbbf24"
-              hint="Task N08 at 0-min slack escalated to Stage Lead"
-            />
-          </Item>
-        </RevealGroup>
-      </section>
+      {/* ===== KPI BENTO ROW ===== */}
+      <RevealGroup className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        {KPIS.map((k) => {
+          const Icon = k.icon;
+          return (
+            <Item key={k.label}>
+              <Tilt max={7} className="h-full">
+                <div className="bento glass-panel-hover h-full p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="kicker">{k.label}</span>
+                    <span
+                      className="w-9 h-9 rounded-xl flex items-center justify-center border"
+                      style={{ color: k.tone, backgroundColor: `${k.tone}1f`, borderColor: `${k.tone}40` }}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </span>
+                  </div>
+                  <div className="font-display text-3xl md:text-4xl font-bold text-white">
+                    <AnimatedNumber value={k.value} suffix={k.suffix} />
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">{k.hint}</p>
+                </div>
+              </Tilt>
+            </Item>
+          );
+        })}
+      </RevealGroup>
 
-      {/* ===== ROLE FOCUS + QUICK NAV ===== */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* role focus */}
-        <div className="lg:col-span-5 space-y-4">
-          <SectionHeader kicker={`${role.tag} priorities`} title="Your focus right now" />
+      {/* ===== FOCUS + MODULES BENTO ===== */}
+      <section className="grid grid-cols-12 gap-5">
+        {/* focus */}
+        <div className="col-span-12 lg:col-span-5 space-y-4">
+          <SectionHeader kicker={`${role.tag} priorities`} title="Your focus now" />
           <RevealGroup className="space-y-3">
             {focus.map((f) => (
               <Item key={f.title}>
-                <div className="rail-card glass-panel glass-panel-hover p-4 rounded-2xl flex items-center gap-4">
-                  <span
-                    className="w-1.5 self-stretch rounded-full shrink-0"
-                    style={{ backgroundColor: f.tone }}
-                  />
+                <div className="bento glass-panel-hover p-4 flex items-center gap-4">
+                  <span className="w-1.5 self-stretch rounded-full shrink-0" style={{ backgroundColor: f.tone }} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-bold text-white truncate">{f.title}</span>
-                      <span className="text-xs font-mono font-bold shrink-0" style={{ color: f.tone }}>
-                        {f.value}
-                      </span>
+                      <span className="text-xs font-mono font-bold shrink-0" style={{ color: f.tone }}>{f.value}</span>
                     </div>
                     <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">{f.detail}</p>
                   </div>
@@ -317,10 +336,10 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
           </RevealGroup>
         </div>
 
-        {/* quick nav */}
-        <div className="lg:col-span-7 space-y-4">
+        {/* modules */}
+        <div className="col-span-12 lg:col-span-7 space-y-4">
           <SectionHeader kicker="Jump to" title="Your modules" />
-          <RevealGroup className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <RevealGroup className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {quickSections.map((s) => {
               const c = NAV_CARDS[s];
               if (!c) return null;
@@ -330,18 +349,18 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
                   <Tilt max={6}>
                     <button
                       onClick={() => onNavigate(s)}
-                      className="rail-card glass-panel glass-panel-hover w-full text-left p-5 rounded-2xl group"
+                      className="bento glass-panel-hover w-full text-left p-5 group"
                     >
                       <div className="flex items-center justify-between">
                         <span
-                          className="w-10 h-10 rounded-xl flex items-center justify-center border"
+                          className="w-11 h-11 rounded-xl flex items-center justify-center border"
                           style={{ color: c.tone, backgroundColor: `${c.tone}1f`, borderColor: `${c.tone}40` }}
                         >
                           <Icon className="w-5 h-5" />
                         </span>
-                        <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        <ArrowUpRight className="w-5 h-5 text-slate-500 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                       </div>
-                      <h4 className="font-display text-sm font-bold text-white mt-3">{c.title}</h4>
+                      <h4 className="font-display text-base font-bold text-white mt-3.5">{c.title}</h4>
                       <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{c.desc}</p>
                     </button>
                   </Tilt>
@@ -355,9 +374,9 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
       {/* ===== RISK MATRIX ===== */}
       <section className="space-y-4">
         <SectionHeader kicker="TAD §10" title="Priority risk matrix" />
-        <RevealGroup className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <RevealGroup className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Item>
-            <div className="glass-panel rail-card p-5 rounded-2xl border-l-2 border-l-rose-400 space-y-2">
+            <div className="bento glass-panel-hover p-5 border-l-2 border-l-rose-400 space-y-2">
               <div className="flex items-center justify-between">
                 <Pill tone="rose">RISK-01 · High</Pill>
                 <span className="text-[11px] font-bold text-rose-300 font-mono">Slack: 0 min</span>
@@ -370,15 +389,14 @@ export const OverviewView: React.FC<OverviewProps> = ({ onNavigate, currentRole,
             </div>
           </Item>
           <Item>
-            <div className="glass-panel rail-card p-5 rounded-2xl border-l-2 border-l-amber-400 space-y-2">
+            <div className="bento glass-panel-hover p-5 border-l-2 border-l-amber-400 space-y-2">
               <div className="flex items-center justify-between">
                 <Pill tone="amber">RISK-02 · Medium</Pill>
                 <span className="text-[11px] font-bold text-amber-300 font-mono">Cap 600</span>
               </div>
               <h4 className="text-sm font-bold text-white">OAT outdoor capacity & weather monitor</h4>
               <p className="text-[12px] text-slate-300/90 leading-relaxed">
-                3 sessions moved outdoors. Rain risk 12% (clear sky). Waterproof canopy rig staged on standby in
-                Store.
+                3 sessions moved outdoors. Rain risk 12% (clear sky). Waterproof canopy rig staged on standby in Store.
               </p>
             </div>
           </Item>

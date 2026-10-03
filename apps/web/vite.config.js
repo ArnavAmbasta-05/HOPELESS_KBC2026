@@ -11,6 +11,7 @@ export default defineConfig({
     server: {
         port: 5173,
         proxy: {
+            // All backend routers (including weather) are under /api/v1/*.
             "/api": {
                 target: "http://localhost:8000",
                 changeOrigin: true,
@@ -20,5 +21,17 @@ export default defineConfig({
     build: {
         outDir: "dist",
         sourcemap: true,
+        rollupOptions: {
+            output: {
+                // Split heavy vendors into their own chunks for faster first paint.
+                manualChunks: {
+                    three: ["three", "@react-three/fiber", "@react-three/drei"],
+                    leaflet: ["leaflet", "maplibre-gl"],
+                    charts: ["recharts"],
+                    motion: ["framer-motion"],
+                    vendor: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+                },
+            },
+        },
     },
 });

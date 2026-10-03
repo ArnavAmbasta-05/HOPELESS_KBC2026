@@ -27,7 +27,7 @@ export const ROLES: RoleDef[] = [
     tag: "Command",
     mandate: "Full-spectrum authority over the KBC 2026 operation.",
     accent: ["#22d3ee", "#6366f1"],
-    sections: ["overview", "venues", "schedule", "simulation", "map", "volunteers", "notion-ai"],
+    sections: ["overview", "venues", "schedule", "dependencies", "simulation", "map", "volunteers", "notion-ai", "participant"],
     clearance: "command",
   },
   {
@@ -36,7 +36,7 @@ export const ROLES: RoleDef[] = [
     tag: "Ops",
     mandate: "Keep every session homed, staffed and on-time.",
     accent: ["#34d399", "#22d3ee"],
-    sections: ["overview", "venues", "schedule", "simulation", "map", "volunteers"],
+    sections: ["overview", "venues", "schedule", "dependencies", "simulation", "map", "volunteers", "participant"],
     clearance: "lead",
   },
   {
@@ -63,7 +63,7 @@ export const ROLES: RoleDef[] = [
     tag: "Crew",
     mandate: "Skill-match, shift and dispatch the volunteer corps.",
     accent: ["#2dd4bf", "#34d399"],
-    sections: ["overview", "volunteers", "schedule", "map"],
+    sections: ["overview", "volunteers", "schedule", "map", "participant"],
     clearance: "lead",
   },
   {
@@ -72,7 +72,7 @@ export const ROLES: RoleDef[] = [
     tag: "Safety",
     mandate: "Gate flow, occupancy and crowd safety across campus.",
     accent: ["#fb7185", "#f59e0b"],
-    sections: ["overview", "map", "venues", "volunteers", "schedule"],
+    sections: ["overview", "map", "venues", "volunteers", "schedule", "participant"],
     clearance: "lead",
   },
   {
@@ -90,7 +90,7 @@ export const ROLES: RoleDef[] = [
     tag: "Root",
     mandate: "Platform root — every surface, every integration, every write.",
     accent: ["#a855f7", "#22d3ee"],
-    sections: ["overview", "venues", "schedule", "simulation", "map", "volunteers", "notion-ai"],
+    sections: ["overview", "venues", "schedule", "dependencies", "simulation", "map", "volunteers", "notion-ai", "participant"],
     clearance: "root",
   },
 ];

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Zap, Search, CheckCircle2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Zap, Search, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Reveal, RevealGroup, Item, SectionHeader } from "./ui";
 
 export interface VolunteerMember {
@@ -14,101 +14,34 @@ export interface VolunteerMember {
   hoursWorked: number;
 }
 
-export const KIIT_VOLUNTEERS: VolunteerMember[] = [
-  {
-    id: "vol_01",
-    name: "Arjun Sharma",
-    phone: "+91 98765 43210",
-    role: "Lead AV Specialist",
-    skill: "AV & Sound Engineering",
-    status: "Active Standby",
-    assignedVenue: "Open Air Theatre (Campus 6)",
-    assignedSession: "Keynote AI Session",
-    hoursWorked: 3.5,
-  },
-  {
-    id: "vol_02",
-    name: "Pooja Verma",
-    phone: "+91 98765 43211",
-    role: "VIP Protocol Escort",
-    skill: "VIP Dignitary Escort",
-    status: "Assigned",
-    assignedVenue: "Gate 1 (Campus 6 VIP Entry)",
-    assignedSession: "Vice Chancellor Welcome",
-    hoursWorked: 2.0,
-  },
-  {
-    id: "vol_03",
-    name: "Rohan Sen",
-    phone: "+91 98765 43212",
-    role: "Stage Decor Lead",
-    skill: "Stage Décor & Logistics",
-    status: "Shifted",
-    assignedVenue: "Open Air Theatre (Bldg C)",
-    assignedSession: "Opening Ceremony Décor Setup",
-    hoursWorked: 4.0,
-  },
-  {
-    id: "vol_04",
-    name: "Sneha Patel",
-    phone: "+91 98765 43213",
-    role: "Gate Scanner Lead",
-    skill: "Crowd Control & Scanning",
-    status: "Assigned",
-    assignedVenue: "Gate 1 (Campus 6 Main Gate)",
-    assignedSession: "Morning Ingest (09:00–10:30)",
-    hoursWorked: 1.5,
-  },
-  {
-    id: "vol_05",
-    name: "Vikram Das",
-    phone: "+91 98765 43214",
-    role: "Hospitality Lead",
-    skill: "Registration & Hospitality",
-    status: "Assigned",
-    assignedVenue: "Campus 7 Seminar Hall",
-    assignedSession: "Keynote Reception",
-    hoursWorked: 2.5,
-  },
-  {
-    id: "vol_06",
-    name: "Ananya Roy",
-    phone: "+91 98765 43215",
-    role: "Sound Technician",
-    skill: "AV & Sound Engineering",
-    status: "Shifted",
-    assignedVenue: "Campus 7 Seminar Hall",
-    assignedSession: "Keynote AI Audio Line",
-    hoursWorked: 3.0,
-  },
-  {
-    id: "vol_07",
-    name: "Karan Mehta",
-    phone: "+91 98765 43216",
-    role: "Escort Volunteer",
-    skill: "VIP Dignitary Escort",
-    status: "Standby",
-    assignedVenue: "Campus 6 Control Room",
-    hoursWorked: 0.5,
-  },
-  {
-    id: "vol_08",
-    name: "Divya Nair",
-    phone: "+91 98765 43217",
-    role: "Stage Crew",
-    skill: "Stage Décor & Logistics",
-    status: "Assigned",
-    assignedVenue: "Open Air Theatre (Bldg C)",
-    assignedSession: "Startup Panel Stage Setup",
-    hoursWorked: 2.0,
-  },
-];
+// Volunteer roster is served live by the backend scenario service
+// (GET /api/v1/scenario/volunteers) — the same seed the volunteer
+// CP-SAT solver uses. No hardcoded roster here.
 
 export const VolunteersView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [skillFilter, setSkillFilter] = useState("all");
-  const [roster, setRoster] = useState(KIIT_VOLUNTEERS);
+  const [roster, setRoster] = useState<VolunteerMember[]>([]);
   const [notif, setNotif] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Roster is served live by the backend scenario service (same seed the
+  // volunteer CP-SAT solver uses): GET /api/v1/scenario/volunteers.
+  useEffect(() => {
+    fetch("/api/v1/scenario/volunteers")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data: VolunteerMember[]) => {
+        setRoster(data);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        console.error("Failed to load volunteers:", err);
+        setLoadError("Unable to load the volunteer roster from the operations API.");
+      });
+  }, []);
 
   const activateStandby = (id: string, name: string) => {
     setRoster((prev) =>
@@ -136,6 +69,13 @@ export const VolunteersView: React.FC = () => {
         </div>
       )}
 
+      {loadError && (
+        <div className="p-3.5 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-xs font-semibold text-rose-200 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-300" />
+          <span>{loadError} Ensure the API is running on :8000.</span>
+        </div>
+      )}
+
       {/* Header */}
       <Reveal>
         <SectionHeader
@@ -147,11 +87,15 @@ export const VolunteersView: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
                 <span className="text-slate-400">Active crew:</span>{" "}
-                <span className="font-bold text-cyan-300">16</span>
+                <span className="font-bold text-cyan-300">
+                  {roster.filter((v) => v.status !== "Active Standby").length}
+                </span>
               </div>
               <div className="px-3.5 py-2 rounded-xl glass-soft text-xs">
                 <span className="text-slate-400">Standby:</span>{" "}
-                <span className="font-bold text-emerald-300">2 ready</span>
+                <span className="font-bold text-emerald-300">
+                  {roster.filter((v) => v.status === "Active Standby").length} ready
+                </span>
               </div>
             </div>
           }

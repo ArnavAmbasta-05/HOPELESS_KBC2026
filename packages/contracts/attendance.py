@@ -60,6 +60,41 @@ class SessionOccupancySignal(BaseModel):
     last_updated: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
+class ParticipantRegistrationRecord(BaseModel):
+    """Participant registration & check-in record for Excel export & attendance marking."""
+    record_id: str = Field(default_factory=lambda: f"rec_{uuid.uuid4().hex[:8]}")
+    event_id: str = "evt_kbc2026"
+    full_name: str
+    roll_no: str
+    email: str
+    phone: str
+    institution: str
+    session_id: str
+    session_name: str
+    venue_id: str
+    venue_name: str
+    check_in_time: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    check_in_time_ist: str = ""
+    status: str = "CONFIRMED_PRESENT"
+    qr_token: str = ""
+    notes: str = ""
+
+
+class ParticipantCheckInRequest(BaseModel):
+    """Payload submitted when scanning QR and filling check-in form."""
+    full_name: str
+    roll_no: str
+    email: str
+    phone: str
+    institution: str = "KIIT Deemed to be University"
+    session_id: str = "ses_opening"
+    session_name: str = "Opening Ceremony & Keynote"
+    venue_id: str = "ven_oat"
+    venue_name: str = "Open Air Theatre (Campus 6)"
+    qr_token: str = ""
+    notes: str = ""
+
+
 class ReconciliationReport(BaseModel):
     """Report comparing registered roster vs actual verified scans (ATT-005)."""
     session_id: str

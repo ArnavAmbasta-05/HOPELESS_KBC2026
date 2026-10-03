@@ -268,7 +268,7 @@ def test_weather_and_knowledge_http_apis(api_client: TestClient):
     """Verifies FastAPI endpoints for weather ingestion, branch proposals, and RAG knowledge."""
     # 1. Weather Ingest IMD
     resp_imd = api_client.post(
-        "/weather/ingest/imd",
+        "/api/v1/weather/ingest/imd",
         json={
             "rainfall_mm_1hr": 30.0,
             "lightning_probability": 80,
@@ -284,7 +284,7 @@ def test_weather_and_knowledge_http_apis(api_client: TestClient):
 
     # 2. Weather Branch Proposal API
     resp_branch = api_client.post(
-        "/weather/branch",
+        "/api/v1/weather/branch",
         json={
             "parent_plan_id": "prop_kbc_disruption_001",
             "disrupted_outdoor_venue_id": "ven_campus_6_oat",

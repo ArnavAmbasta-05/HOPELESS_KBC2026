@@ -149,6 +149,26 @@ async def chat_with_gemini_copilot(
 ) -> ResponseEnvelope[dict[str, Any]]:
     """Answers operator operational queries live using Gemini with grounding context."""
     import os
+    from services.api.ai_guard import inspect_prompt, GUARD_SYSTEM_PREFIX
+
+    # Anti-jailbreak / prompt-injection guard: run BEFORE touching the LLM.
+    guard = inspect_prompt(request.prompt)
+    if guard.blocked:
+        logger.warning("ai.guard_blocked", category=guard.category, user=current_user.user_id)
+        return make_success_envelope(
+            data={
+                "response": guard.message,
+                "is_live_gemini": False,
+                "blocked_by_guard": True,
+                "guard_category": guard.category,
+                "model_name": "n/a",
+                "label": "BLOCKED by KoreX AI safety guard (prompt-injection / jailbreak defence)",
+                "grounding_sources": ["guard:prompt_injection_filter"],
+                "confidence": "100%",
+            },
+            request_id=str(uuid.uuid4()),
+        )
+
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
     model_name = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
@@ -180,6 +200,7 @@ async def chat_with_gemini_copilot(
 
     if api_key:
         system_prompt = (
+            GUARD_SYSTEM_PREFIX +
             "You are the KoreX AI Operational Supervisor for KIIT University Event Command Center.\n"
             "If the user greets you (e.g. 'hey', 'hello'), greet them back warmly as the Event Commander and provide a 1-2 sentence readiness status.\n"
             "If they ask an operational or map/GIS question, answer concisely and professionally using these grounded facts:\n"

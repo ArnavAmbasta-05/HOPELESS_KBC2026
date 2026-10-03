@@ -12,7 +12,10 @@ from services.api.routers.notion import router as notion_router
 from services.api.routers.participants import router as participants_router
 from services.api.routers.planning import router as planning_router
 from services.api.routers.proposals import router as proposals_router
+from services.api.routers.governance import router as governance_router
+from services.api.routers.itinerary import router as itinerary_router
 from services.api.routers.resources import router as resources_router
+from services.api.routers.scenario import router as scenario_router
 from services.api.routers.sessions import router as sessions_router
 from services.api.routers.transport import router as transport_router
 from services.api.routers.venues import router as venues_router
@@ -38,6 +41,9 @@ __all__ = [
     "weather_router",
     "knowledge_router",
     "carto_router",
+    "scenario_router",
+    "governance_router",
+    "itinerary_router",
 ]
 
 

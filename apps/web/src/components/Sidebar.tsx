@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   GitBranch,
+  Share2,
   MapPin,
   Users2,
   Sparkles,
@@ -21,6 +22,7 @@ export type NavSection =
   | "overview"
   | "venues"
   | "schedule"
+  | "dependencies"
   | "simulation"
   | "map"
   | "volunteers"
@@ -33,14 +35,16 @@ interface NavMeta {
   subtitle: string;
 }
 
-const NAV_META: Record<Exclude<NavSection, "participant">, NavMeta> = {
+const NAV_META: Record<NavSection, NavMeta> = {
   overview: { label: "Command Overview", icon: LayoutDashboard, subtitle: "Live situational picture" },
   venues: { label: "Venues & Auditoriums", icon: Building2, subtitle: "Capacities, AV & staff" },
   schedule: { label: "Master Schedule", icon: CalendarDays, subtitle: "Timeline, speakers, hostels" },
+  dependencies: { label: "Dependency Graph", icon: Share2, subtitle: "Blast radius & impact" },
   simulation: { label: "Simulation Studio", icon: GitBranch, subtitle: "What-if solver & diffs" },
   map: { label: "Campus Digital Twin", icon: MapPin, subtitle: "Shuttles, gates & corridors" },
   volunteers: { label: "Volunteers & Shifts", icon: Users2, subtitle: "Skill match & standby" },
   "notion-ai": { label: "Notion & AI Center", icon: Sparkles, subtitle: "Live sync & co-pilot" },
+  participant: { label: "Participant QR Portal", icon: QrCode, subtitle: "Gate pass & attendance Excel" },
 };
 
 interface SidebarProps {
@@ -227,27 +231,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Participant portal */}
-      <div className="p-3 border-t border-white/[0.07]">
-        <a
-          href="/participant"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Participant Portal"
-          className="flex items-center gap-2.5 p-2.5 rounded-xl glass-soft hover:border-cyan-500/40 hover:bg-white/[0.06] transition-all text-slate-300 hover:text-white group"
-        >
-          <QrCode className="w-4 h-4 text-cyan-300 shrink-0" />
-          {!collapsed && (
-            <>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold truncate">Participant Portal</div>
-                <div className="text-[10px] text-slate-500 truncate">QR check-in & passes</div>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-300 group-hover:translate-x-0.5 transition-transform" />
-            </>
-          )}
-        </a>
-      </div>
+
 
       {/* Collapse toggle */}
       <button
