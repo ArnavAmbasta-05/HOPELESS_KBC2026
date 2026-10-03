@@ -22,15 +22,13 @@ services:
         sync: false
 
   # -------------------------------------------------------------
-  # KoreX Web Frontend (Free Static Site)
+  # KoreX Web Frontend (Free Static Site CDN)
   # -------------------------------------------------------------
   - type: web
     name: korex-web
     runtime: static
     buildCommand: "npm --prefix apps/web install && npm --prefix apps/web run build"
     staticPublishPath: "./apps/web/dist"
-    plan: free
-    region: oregon
     routes:
       - type: rewrite
         source: /*
